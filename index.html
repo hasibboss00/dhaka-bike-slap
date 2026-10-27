@@ -14,14 +14,29 @@
   .topbar span{white-space:nowrap}
   .legbar{background:rgba(0,0,0,0.55);padding:5px 12px;font-size:14px;font-weight:bold}
   .hudbtn{pointer-events:auto;background:rgba(0,0,0,0.6);color:#fff;border:2px solid #fff;border-radius:8px;padding:6px 10px;font-size:14px;font-weight:bold;cursor:pointer}
-  #prompt{display:none;position:fixed;left:0;right:0;top:30%;text-align:center;z-index:6;pointer-events:none}
-  #prompt span{background:#e74c3c;color:#fff;font-size:44px;font-weight:bold;padding:8px 26px;border-radius:14px;box-shadow:0 4px 0 #922b21}
-  #popup{display:none;position:fixed;left:0;right:0;top:20%;text-align:center;z-index:6;pointer-events:none}
-  #popup .pts{color:#ffd700;font-size:40px;font-weight:bold;text-shadow:2px 2px #000}
-  #popup .taunt{color:#fff;font-size:22px;font-weight:bold;text-shadow:2px 2px #000;margin-top:4px}
+  #prompt{display:none;position:fixed;right:142px;bottom:60px;z-index:6;pointer-events:none}
+  #prompt span{background:#fff;color:#222;font-size:17px;font-weight:bold;padding:8px 14px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.45);white-space:nowrap}
+  #offenceFeed{position:fixed;left:0;right:0;top:86px;text-align:center;z-index:6;pointer-events:none}
+  .offenceLabel{display:inline-block;background:rgba(0,0,0,.65);color:#ffd700;font-size:15px;font-weight:bold;padding:4px 12px;border-radius:999px;margin:2px 4px;transition:opacity .4s}
+  .offenceLabel.bad{color:#ff6b6b}
+  .offenceLabel.fade{opacity:0}
+  #targetMarker{display:none;position:fixed;left:0;top:0;z-index:6;pointer-events:none;text-align:center}
+  #handIcon{font-size:30px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));animation:bob .5s infinite alternate}
+  #speechBubble{display:inline-block;background:#fff;color:#222;font-size:14px;font-weight:bold;padding:5px 10px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.4);white-space:nowrap;margin-bottom:2px}
+  @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+  #rageWrap{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:5;width:180px;text-align:center;color:#fff;font-size:12px;font-weight:bold;text-shadow:1px 1px #000;pointer-events:none}
+  #rageTrack{height:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.5);border-radius:6px;overflow:hidden;margin-top:2px}
+  #rageFill{height:100%;width:0%;background:linear-gradient(90deg,#ff8c00,#ffb347);transition:width .3s}
+  .bar{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:9;display:none}
+  #barTop{top:0}
+  #barBot{bottom:0}
+  #cineText{display:none;position:fixed;left:0;right:0;top:13vh;text-align:center;z-index:10;color:#fff;font-size:20px;font-weight:bold;text-shadow:2px 2px #000;pointer-events:none;padding:0 16px}
+  #cinePts{display:none;position:fixed;left:0;right:0;top:46%;text-align:center;z-index:10;color:#ffd700;font-size:44px;font-weight:bold;text-shadow:2px 2px #000;pointer-events:none}
   #flash{position:fixed;inset:0;background:rgba(255,0,0,0.35);opacity:0;pointer-events:none;z-index:7}
   #slapBtn{display:none;position:fixed;right:18px;bottom:26px;z-index:8;width:110px;height:110px;border-radius:50%;background:#e74c3c;color:#fff;font-size:26px;font-weight:bold;border:5px solid #fff;box-shadow:0 6px 0 #922b21;cursor:pointer}
   #slapBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #922b21}
+  #slapBtn.armed{animation:btnGlow .45s infinite alternate}
+  @keyframes btnGlow{from{box-shadow:0 0 0 3px #ffd700,0 0 14px 4px rgba(255,215,0,.7)}to{box-shadow:0 0 0 5px #ffd700,0 0 28px 8px rgba(255,215,0,1)}}
   .overlay{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,0.82);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;overflow-y:auto}
   .overlay h1{color:#ffd700;font-size:42px;margin:0 0 6px}
   .overlay h2{font-size:20px;margin:0 0 14px}
@@ -53,10 +68,16 @@
   <div class="legbar" id="hud-leg">শাহবাগ → কাটাবন | বাকি: 930m</div>
 </div>
 
-<div id="prompt"><span>মারো! ✋</span></div>
-<div id="popup"><div class="pts" id="popup-pts"></div><div class="taunt" id="popup-taunt"></div></div>
+<div id="prompt"><span>✋ মারো চড়!</span></div>
+<div id="offenceFeed"></div>
+<div id="targetMarker"><div id="speechBubble"></div><div id="handIcon">✋</div></div>
 <div id="flash"></div>
 <button id="slapBtn">চড়!</button>
+<div id="rageWrap"><span>😡 রাগ</span><div id="rageTrack"><div id="rageFill"></div></div></div>
+<div class="bar" id="barTop"></div>
+<div class="bar" id="barBot"></div>
+<div id="cineText">এই রিকশা! প্লেট ছাড়া রাস্তায় বের হইছো কেন?</div>
+<div id="cinePts">+১৪০</div>
 
 <div class="overlay" id="menu">
   <h1>ঢাকা রাইড: চড় মারো!</h1>
@@ -450,7 +471,6 @@ function blobShadow(x, z, r){
 // ================= PLAYER BIKE + RIDER =================
 const LANES = [-2.2, 0, 2.2];
 const BIKE_PLATE = 'ঢাকা মেট্রো-খ ০৭-৯৯১১';
-let slapArmG = null;
 function buildBike(){
   const g = new THREE.Group();
   const red = new THREE.MeshStandardMaterial({ color: 0x9e2b25, roughness: 0.35, metalness: 0.45 });
@@ -512,27 +532,10 @@ function buildBike(){
   // left arm with elbow bend
   limb(0.10, 0.32, blue, -0.32, 1.45, -0.15, -0.7);
   limb(0.09, 0.3, blue, -0.32, 1.2, 0.06, -1.4);
-  // right arm = slap arm: pivoted at the shoulder so it can visibly swing
-  // (upper arm + bent forearm + open hand — same pivot, same swing timing)
-  slapArmG = new THREE.Group();
-  slapArmG.position.set(0.32, 1.5, -0.1);
-  const upperGeo = new THREE.CylinderGeometry(0.095, 0.085, 0.34, 8);
-  upperGeo.translate(0, -0.17, 0);
-  slapArmG.add(new THREE.Mesh(upperGeo, blue));
-  const foreG = new THREE.Group();
-  foreG.position.set(0, -0.34, 0); foreG.rotation.x = -0.45;
-  const foreGeo = new THREE.CylinderGeometry(0.085, 0.075, 0.32, 8);
-  foreGeo.translate(0, -0.16, 0);
-  foreG.add(new THREE.Mesh(foreGeo, blue));
-  const palm = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.05, 0.2), skin);
-  palm.position.set(0, -0.36, 0); foreG.add(palm);
-  for(let f = 0; f < 4; f++){
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.12, 0.03), skin);
-    fin.position.set(-0.055 + f * 0.037, -0.44, 0); foreG.add(fin);
-  }
-  slapArmG.add(foreG);
-  slapArmG.rotation.x = -1.1;
-  g.add(slapArmG);
+  // right arm: rests on the handlebar, exactly like the left arm — the rider's
+  // hands stay on the bars at all times, including during a slap
+  limb(0.10, 0.32, blue, 0.32, 1.45, -0.15, -0.7);
+  limb(0.09, 0.3, blue, 0.32, 1.2, 0.06, -1.4);
   g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
   scene.add(g);
   return g;
@@ -616,10 +619,53 @@ function spawnGantry(z){
   gantries.push(g);
 }
 
-// target ring
-const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.1, 24),
-  new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
-ring.rotation.x = -Math.PI/2; ring.visible = false; scene.add(ring);
+// police officer figure (original low-poly) for the plate-offence cutaway
+function starMesh(){
+  const s = new THREE.Shape();
+  for(let i = 0; i < 10; i++){
+    const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    const r = i % 2 === 0 ? 0.13 : 0.055;
+    const px = Math.cos(a) * r, py = Math.sin(a) * r;
+    if(i === 0) s.moveTo(px, py); else s.lineTo(px, py);
+  }
+  s.closePath();
+  return new THREE.Mesh(new THREE.ShapeGeometry(s), new THREE.MeshBasicMaterial({ color: 0xffd700, side: THREE.DoubleSide }));
+}
+function buildOfficer(){
+  const g = new THREE.Group();
+  const navy = new THREE.MeshStandardMaterial({ color: 0x1a2f5a, roughness: 0.85 });
+  const skinM = new THREE.MeshStandardMaterial({ color: 0xc68a5e, roughness: 0.7 });
+  g.add(box(0.55, 0.75, 0.32, 0x1a2f5a, 0, 1.05, 0));
+  g.add(box(0.57, 0.08, 0.34, 0x111111, 0, 0.72, 0));
+  const badge = new THREE.Mesh(new THREE.CircleGeometry(0.06, 12), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
+  badge.position.set(-0.15, 1.25, 0.17); g.add(badge);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 14, 10), skinM);
+  head.position.set(0, 1.68, 0); g.add(head);
+  const capTop = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.24, 0.14, 14), navy);
+  capTop.position.set(0, 1.86, 0); g.add(capTop);
+  g.add(box(0.4, 0.04, 0.22, 0x111111, 0, 1.8, 0.24));
+  [-0.32, 0.32].forEach(ax=>{
+    g.add(box(0.14, 0.62, 0.14, 0x1a2f5a, ax, 1.05, 0));
+    g.add(box(0.17, 0.68, 0.17, 0x222222, ax, 0.34, 0));
+  });
+  g.position.set(4.6, 0, -8);
+  g.rotation.y = -Math.PI / 2;
+  g.visible = false;
+  scene.add(g);
+  return g;
+}
+const officer = buildOfficer();
+const starGroup = new THREE.Group();
+starGroup.position.set(4.6, 2.15, -8);
+for(let i = 0; i < 4; i++){
+  const st = starMesh();
+  st.rotation.y = Math.PI / 2;
+  const a = i * (Math.PI * 2 / 4);
+  st.position.set(0, Math.cos(a) * 0.5, Math.sin(a) * 0.5);
+  starGroup.add(st);
+}
+starGroup.visible = false;
+scene.add(starGroup);
 
 // ================= GAME STATE =================
 const LEGS = [
@@ -630,12 +676,13 @@ const LEGS = [
   { from:'মতিঝিল', to:'সচিবালয়', dist:850 }
 ];
 const POINTS = { plate: 140, wrongway: 50, signal: 40, indicator: 30 };
-const TAUNTS = {
-  plate: ['প্লেট কই, মামা?', 'প্লেট ছাড়া চলবে না!', 'নাম্বার প্লেট কই গেল?'],
-  wrongway: ['উল্টা পথে কেন?', 'উল্টা চললে হবে?', 'এই রাস্তা একমুখী!'],
-  signal: ['লাল বাতি মানেন নাই!', 'লাল বাতিতেও চলছেন?', 'সিগন্যাল ভাঙলেন কেন?'],
-  indicator: ['ইন্ডিকেটর দেন নাই!', 'বাতি ছাড়া লেন বদল?', 'ইন্ডিকেটর কই?'],
-  innocent: ['আরে, নির্দোষ মানুষ!', 'ভুল লোককে মারলেন!', 'উনি তো ঠিকই চলছিলেন!']
+const OFFENCE_NAMES = { plate: 'প্লেট নাই', wrongway: 'উল্টা পথ', signal: 'সিগন্যাল ভাঙা', indicator: 'ইন্ডিকেটর নাই' };
+const BUBBLE_LINES = {
+  plate: 'প্লেট ছাড়া রাস্তায় নামছো কেন?',
+  wrongway: 'উল্টা আসতেছো, চোখ কই?',
+  signal: 'লাল বাতি চোখে পড়ে না?',
+  indicator: 'হাত না দেখাইয়া লেন বদলাও?',
+  innocent: 'আমি তো ঠিকমতোই চালাইতেছি!'
 };
 let state = 'menu', paused = false;
 let player = { lane: 1, x: 0 };
@@ -645,26 +692,50 @@ let stats = { plate: 0, wrongway: 0, signal: 0, indicator: 0, innocent: 0 };
 let legIdx = 0, remaining = 930, elapsed = 0, spawnT = 1, slapCd = 0, shakeT = 0;
 let best = parseInt(localStorage.getItem('dhakaSlapRideBest') || '0', 10);
 let target = null;
-let slapT = 0, slapHitDone = false, slapVictim = null;
-const bursts = [];
-function spawnBurst(p){
-  const mat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 1 });
-  for(let i = 0; i < 12; i++){
-    const s = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), mat);
-    s.position.set(p.x, 1.2, p.z);
-    const a = Math.random()*Math.PI*2, v = 2 + Math.random()*2;
-    s.userData = { vx: Math.cos(a)*v, vy: 2 + Math.random()*2, vz: Math.sin(a)*v, life: 0.8 };
-    scene.add(s); bursts.push(s);
-  }
-}
+let rage = 0;
+let cineT = 0;
+let speedKmh = 50;
+const CINE_LEN = 2.6;
 
 const $ = id => document.getElementById(id);
-function showPopup(pts, taunt){
-  $('popup-pts').textContent = pts;
-  $('popup-taunt').textContent = taunt;
-  $('popup').style.display = 'block';
-  clearTimeout(showPopup._t);
-  showPopup._t = setTimeout(()=>{ $('popup').style.display = 'none'; }, 1600);
+function addOffenceLabel(text, cls){
+  const feed = $('offenceFeed');
+  const d = document.createElement('div');
+  d.className = 'offenceLabel' + (cls ? ' ' + cls : '');
+  d.textContent = text;
+  feed.appendChild(d);
+  while(feed.children.length > 3) feed.removeChild(feed.firstChild);
+  setTimeout(()=>{ d.classList.add('fade'); setTimeout(()=>{ d.remove(); }, 450); }, 1100);
+}
+function updateRage(){ $('rageFill').style.width = rage + '%'; }
+function startCinematic(){
+  cineT = CINE_LEN;
+  $('hud').style.display = 'none';
+  $('slapBtn').style.display = 'none';
+  $('rageWrap').style.display = 'none';
+  $('prompt').style.display = 'none';
+  $('targetMarker').style.display = 'none';
+  $('barTop').style.display = 'block';
+  $('barBot').style.display = 'block';
+  $('cineText').style.display = 'block';
+  $('cinePts').style.display = 'block';
+  officer.visible = true;
+  starGroup.visible = true;
+  sWhistle();
+}
+function endCinematic(){
+  cineT = 0;
+  officer.visible = false;
+  starGroup.visible = false;
+  $('barTop').style.display = 'none';
+  $('barBot').style.display = 'none';
+  $('cineText').style.display = 'none';
+  $('cinePts').style.display = 'none';
+  if(state === 'play'){
+    $('hud').style.display = 'block';
+    $('slapBtn').style.display = 'block';
+    $('rageWrap').style.display = 'block';
+  }
 }
 function flashRed(){
   $('flash').style.opacity = '1';
@@ -672,7 +743,7 @@ function flashRed(){
 }
 function updateHUD(){
   $('hud-score').textContent = 'স্কোর: ' + score;
-  $('hud-speed').textContent = Math.round(47 + Math.sin(elapsed*0.6)*3) + ' km/h';
+  $('hud-speed').textContent = Math.round(speedKmh) + ' km/h';
   $('hud-hearts').textContent = '♥'.repeat(Math.max(0, hearts)) + '♡'.repeat(Math.max(0, 3 - hearts));
   $('hud-plates').textContent = 'প্লেট: ' + plates;
   const leg = LEGS[legIdx];
@@ -700,6 +771,7 @@ function startGame(stIdx){
   score = 0; hearts = 3; plates = 0; slaps = 0; crashes = 0; totalDist = 0;
   stats = { plate: 0, wrongway: 0, signal: 0, indicator: 0, innocent: 0 };
   elapsed = 0; spawnT = 1; slapCd = 0; shakeT = 0; target = null;
+  rage = 0; updateRage();
   player.lane = 1; player.x = 0;
   state = 'play'; paused = false;
   $('menu').style.display = 'none';
@@ -707,14 +779,19 @@ function startGame(stIdx){
   $('pauseOv').style.display = 'none';
   $('hud').style.display = 'block';
   $('slapBtn').style.display = 'block';
+  $('rageWrap').style.display = 'block';
   $('prompt').style.display = 'none';
+  $('targetMarker').style.display = 'none';
+  endCinematic();
   updateHUD();
 }
 function gameOver(){
   state = 'over';
   $('slapBtn').style.display = 'none';
   $('prompt').style.display = 'none';
-  ring.visible = false;
+  $('rageWrap').style.display = 'none';
+  $('targetMarker').style.display = 'none';
+  endCinematic();
   if(score > best){ best = score; localStorage.setItem('dhakaSlapRideBest', String(best)); }
   sWin();
   $('over-title').textContent = 'খেলা শেষ!';
@@ -754,7 +831,7 @@ function spawnRickshaw(){
     mesh: built.group, indL: built.indL, indR: built.indR, lane: lane, targetLane: lane,
     offence: offence,
     speed: isWrong ? -4 : 5 + Math.random()*2,
-    slapped: false, tilt: 0,
+    slapped: false,
     blink: 0, legalChanger: false
   };
   if(!offence && Math.random() < 0.3){
@@ -783,30 +860,28 @@ function findTarget(){
 }
 function doSlap(){
   if(state !== 'play' || paused) return;
+  if(cineT > 0) return;
   if(slapCd > 0) return;
-  slapCd = 0.45;
-  slapT = 0.9; slapHitDone = false; slapVictim = null; // slow readable hand swing on every press
   const t = findTarget();
-  if(!t) return;
+  if(!t) return; // no prompt visible: the slap does nothing at all
+  slapCd = 0.45;
   slaps++;
   t.slapped = true;
-  slapVictim = t;
-  t.wobble = 0.6; // slapped rickshaw wobbles, longer so it reads
   sSlap();
   if(t.offence){
     const pts = POINTS[t.offence];
     score += pts;
     stats[t.offence]++;
     if(t.offence === 'plate'){ plates++; sCoin(); }
-    const list = TAUNTS[t.offence];
-    showPopup('+' + pts, list[Math.floor(Math.random()*list.length)]);
+    rage = Math.min(100, rage + 12);
+    updateRage();
+    if(t.offence === 'plate') startCinematic();
+    else addOffenceLabel(OFFENCE_NAMES[t.offence] + ' +' + pts, '');
   } else {
     score = Math.max(0, score - 30);
     stats.innocent++;
-    const list = TAUNTS.innocent;
-    showPopup('−৩০', list[Math.floor(Math.random()*list.length)]);
+    addOffenceLabel('নির্দোষ! −৩০', 'bad');
   }
-  shakeT = 0.12;
 }
 function doCrash(r){
   hearts--;
@@ -890,10 +965,22 @@ function update(dt){
   if(state !== 'play' || paused) return;
   elapsed += dt;
   lastDt = dt;
-  const scroll = 13.5 + Math.sin(elapsed*0.5)*1.5;
+  // Tesla-style speed: ease down behind a close target, recover after passing;
+  // nearly stop during the police cinematic
+  const earlyTarget = findTarget();
+  let targetSpeed;
+  if(cineT > 0) targetSpeed = 23;
+  else if(earlyTarget && earlyTarget.mesh.position.z > -16) targetSpeed = 32;
+  else targetSpeed = 50 + Math.sin(elapsed*0.6)*3;
+  speedKmh += (targetSpeed - speedKmh) * Math.min(1, dt*2.5);
+  const scroll = speedKmh * 0.27;
   currentScroll = scroll;
   if(slapCd > 0) slapCd -= dt;
   if(shakeT > 0) shakeT -= dt;
+  if(cineT > 0){
+    cineT -= dt;
+    if(cineT <= 0) endCinematic(); // timer guard: the cutaway always exits
+  }
 
   // player
   player.x += (LANES[player.lane] - player.x) * Math.min(1, dt*12);
@@ -942,9 +1029,9 @@ function update(dt){
     const r = rickshaws[i];
     const g = r.mesh;
     if(r.slapped){
+      // slapped rickshaw stays upright and straight, and is simply left behind
       g.position.z += (scroll + 9) * dt;
-      r.tilt = Math.min(0.6, r.tilt + dt*3);
-      g.rotation.z = r.tilt;
+      g.rotation.z = 0;
       if(g.position.z > 14){ scene.remove(g); rickshaws.splice(i, 1); }
       continue;
     }
@@ -972,59 +1059,37 @@ function update(dt){
       }
     }
     g.position.x += (LANES[r.lane] - g.position.x) * Math.min(1, dt*8);
-    if(r.wobble > 0){ r.wobble -= dt; g.rotation.z = Math.sin(r.wobble*40)*0.18; } else g.rotation.z = 0;
-    // crash check
-    if(r.lane === player.lane && Math.abs(g.position.z) < 1.3){
+    g.rotation.z = 0;
+    // crash check (suspended during the police cinematic)
+    if(cineT <= 0 && r.lane === player.lane && Math.abs(g.position.z) < 1.3){
       doCrash(r);
       continue;
     }
     if(g.position.z > 14){ scene.remove(g); rickshaws.splice(i, 1); }
   }
 
-  // slap target + prompt + ring
+  // Tesla-style prompt: white pill + glowing button + hand icon + speech bubble
   target = findTarget();
-  if(target){
+  if(target && cineT <= 0){
     $('prompt').style.display = 'block';
-    ring.visible = true;
-    ring.position.set(target.mesh.position.x, 0.06, target.mesh.position.z);
-    const s = 1 + Math.sin(elapsed*10)*0.15;
-    ring.scale.set(s, s, 1);
+    $('slapBtn').classList.add('armed');
+    const marker = $('targetMarker');
+    marker.style.display = 'block';
+    const key = target.offence || 'innocent';
+    if(marker._key !== key || marker._t !== target){
+      marker._key = key; marker._t = target;
+      $('speechBubble').textContent = BUBBLE_LINES[key];
+    }
+    const v = new THREE.Vector3(target.mesh.position.x, 3.6, target.mesh.position.z).project(camera);
+    if(v.z < 1){
+      const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
+      const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
+      marker.style.transform = 'translate(-50%,-100%) translate(' + sx + 'px,' + sy + 'px)';
+    }
   } else {
     $('prompt').style.display = 'none';
-    ring.visible = false;
-  }
-
-  // hand slap swing animation + impact bursts (slow + holds so it READS on screen)
-  if(slapArmG){
-    if(slapT > 0){
-      slapT -= dt;
-      const p = 1 - slapT / 0.9;
-      if(p < 0.38){
-        const k = p / 0.38; // wind-up: arm rises up and out, held at the top
-        slapArmG.rotation.x = -1.1 + k * 2.0;
-        slapArmG.rotation.z = -k * 0.8;
-      } else if(p < 0.55){
-        const k = (p - 0.38) / 0.17; // fast chop down-forward
-        slapArmG.rotation.x = 0.9 - k * 2.5;
-        slapArmG.rotation.z = -0.8 + k * 0.8;
-      } else if(p < 0.72){
-        slapArmG.rotation.x = -1.6; slapArmG.rotation.z = 0; // impact hold
-        if(!slapHitDone && slapVictim && slapVictim.mesh){ slapHitDone = true; spawnBurst(slapVictim.mesh.position); }
-      } else {
-        const k = (p - 0.72) / 0.28; // return to handlebar
-        slapArmG.rotation.x = -1.6 + k * 0.5;
-        slapArmG.rotation.z = 0;
-      }
-    } else { slapArmG.rotation.x = -1.1; slapArmG.rotation.z = 0; }
-  }
-  for(let i = bursts.length - 1; i >= 0; i--){
-    const b = bursts[i];
-    b.userData.life -= dt;
-    if(b.userData.life <= 0){ scene.remove(b); bursts.splice(i, 1); continue; }
-    b.position.x += b.userData.vx * dt;
-    b.position.y += b.userData.vy * dt;
-    b.position.z += b.userData.vz * dt;
-    b.material.opacity = b.userData.life / 0.8;
+    $('slapBtn').classList.remove('armed');
+    $('targetMarker').style.display = 'none';
   }
 
   // distance / legs
@@ -1032,30 +1097,30 @@ function update(dt){
   totalDist += scroll * dt;
   if(remaining <= 0){
     score += 200;
-    showPopup('+২০০', 'স্টপে পৌঁছে গেছ!');
+    addOffenceLabel('স্টপে পৌঁছেছো! +২০০', '');
     sCoin();
     legIdx = (legIdx + 1) % LEGS.length;
     remaining = LEGS[legIdx].dist;
   }
 
-  // camera shake
-  if(shakeT > 0){
-    camera.position.x = (Math.random()-0.5)*0.25;
-    camera.position.y = 4.6 + (Math.random()-0.5)*0.2;
+  // camera: fixed chase view during every rickshaw slap; letterboxed cutaway
+  // only during the plate-offence police cinematic
+  if(cineT > 0){
+    if(cineT > 1.4){
+      camera.position.set(player.x, 1.7, -5.5);
+      camera.lookAt(player.x, 1.1, 0.5);
+    } else {
+      camera.position.set(0.6, 1.5, -7.5);
+      camera.lookAt(4.6, 1.3, -8);
+      starGroup.rotation.x += dt * 2.2;
+    }
   } else {
-    camera.position.x = 0; camera.position.y = 4.6;
-  }
-
-  // slap close-up camera (Tesla-style cutaway): punch in near the rider during the swing
-  if(slapT > 0){
-    const kin = Math.min(1, (0.9 - slapT) / 0.15);
-    const kout = slapT < 0.25 ? slapT / 0.25 : 1;
-    const k = Math.min(kin, kout);
-    camera.position.x = bike.position.x + 2.4 * k;
-    camera.position.y = 4.6 - 2.4 * k;
-    camera.position.z = 8.2 - 5.2 * k;
-    camera.lookAt(bike.position.x, 1.2, -2);
-  } else {
+    if(shakeT > 0){
+      camera.position.x = (Math.random()-0.5)*0.25;
+      camera.position.y = 4.6 + (Math.random()-0.5)*0.2;
+    } else {
+      camera.position.x = 0; camera.position.y = 4.6;
+    }
     camera.position.z = 8.2;
     camera.lookAt(0, 1.2, -12);
   }
