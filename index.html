@@ -503,7 +503,7 @@ function buildRickshaw(offence){
 }
 
 // signal gantry (red light, paired with signal offenders)
-const gantries = [];
+let gantries = [];
 function spawnGantry(z){
   const g = new THREE.Group();
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
