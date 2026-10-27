@@ -958,6 +958,20 @@ function update(dt){
     camera.position.x = 0; camera.position.y = 4.6;
   }
 
+  // slap close-up camera (Tesla-style cutaway): punch in near the rider during the swing
+  if(slapT > 0){
+    const kin = Math.min(1, (0.9 - slapT) / 0.15);
+    const kout = slapT < 0.25 ? slapT / 0.25 : 1;
+    const k = Math.min(kin, kout);
+    camera.position.x = bike.position.x + 2.4 * k;
+    camera.position.y = 4.6 - 2.4 * k;
+    camera.position.z = 8.2 - 5.2 * k;
+    camera.lookAt(bike.position.x, 1.2, -2);
+  } else {
+    camera.position.z = 8.2;
+    camera.lookAt(0, 1.2, -12);
+  }
+
   updateHUD();
 }
 
