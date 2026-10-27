@@ -28,6 +28,8 @@
   .overlay p{margin:5px 0;font-size:15px;max-width:560px}
   .stationBtn{margin:6px;padding:12px 22px;font-size:18px;font-weight:bold;background:#2471a3;color:#fff;border:0;border-radius:10px;cursor:pointer}
   .stationBtn:hover{background:#2e86c1}
+  .stationBtn.sel{background:#f1c40f;color:#000}
+  #startBtn{margin-top:18px;padding:16px 64px;font-size:28px;font-weight:bold;background:#e74c3c;color:#fff;border:5px solid #fff;border-radius:50px;box-shadow:0 6px 0 #922b21;cursor:pointer}
   .bigBtn{margin-top:20px;padding:14px 30px;font-size:20px;font-weight:bold;background:#2ecc71;color:#fff;border:0;border-radius:10px;cursor:pointer}
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;max-width:520px;width:100%}
   .cell{background:rgba(255,255,255,0.12);border-radius:10px;padding:10px}
@@ -59,7 +61,7 @@
 <div class="overlay" id="menu">
   <h1>ঢাকা রাইড: চড় মারো!</h1>
   <h2>বাইকে চড়ে ঢাকার রাস্তায় অপরাধী রিকশাওয়ালাকে চড় মারো</h2>
-  <p>স্টেশন বেছে নাও, তারপর রাইড শুরু হবে। রিকশা দেখে চিনে চড় মারো:</p>
+  <p>স্টেশন বেছে নাও, তারপর START চাপো। রিকশা দেখে চিনে চড় মারো:</p>
   <p><b>সামনে প্লেট নাই</b> • <b>উল্টা পথে আসছে</b> • <b>লাল বাতি মানছে না</b> • <b>ইন্ডিকেটর ছাড়া লেন বদলাচ্ছে</b></p>
   <p>প্লেট অপরাধে +১৪০, উল্টা পথে +৫০, সিগন্যালে +৪০, ইন্ডিকেটরে +৩০। নির্দোষকে মারলে −৩০। রিকশায় ধাক্কা খেলে ১টা জীবন যাবে।</p>
   <p style="color:#ffd700;font-weight:bold">লেন: ← → বা A / D • চড়: Space বা চড় বোতাম • মোবাইলে সোয়াইপে লেন</p>
@@ -71,6 +73,7 @@
     <button class="stationBtn" data-st="3">উত্তরা</button>
     <button class="stationBtn" data-st="4">মতিঝিল</button>
   </div>
+  <button id="startBtn">▶ START</button>
 </div>
 
 <div class="overlay" id="pauseOv">
@@ -708,9 +711,16 @@ function moveLane(dir){
   if(state !== 'play' || paused) return;
   player.lane = Math.max(0, Math.min(2, player.lane + dir));
 }
+let selSt = 0;
 document.querySelectorAll('.stationBtn').forEach(b=>{
-  b.addEventListener('click', ()=>startGame(parseInt(b.dataset.st, 10)));
+  b.addEventListener('click', ()=>{
+    selSt = parseInt(b.dataset.st, 10);
+    document.querySelectorAll('.stationBtn').forEach(x=>x.classList.toggle('sel', x===b));
+    sClick();
+  });
 });
+document.querySelectorAll('.stationBtn')[0].classList.add('sel');
+$('startBtn').addEventListener('click', ()=>startGame(selSt));
 $('againBtn').addEventListener('click', ()=>{
   $('over').style.display = 'none';
   $('menu').style.display = 'flex';
