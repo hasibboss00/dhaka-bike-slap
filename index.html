@@ -398,6 +398,7 @@ function blobShadow(x, z, r){
 // ================= PLAYER BIKE + RIDER =================
 const LANES = [-2.2, 0, 2.2];
 const BIKE_PLATE = 'ঢাকা মেট্রো-খ ০৭-৯৯১১';
+let slapArmG = null;
 function buildBike(){
   const g = new THREE.Group();
   const red = new THREE.MeshLambertMaterial({ color: 0xc0392b });
@@ -440,7 +441,16 @@ function buildBike(){
   limb(0.11, 0.6, darkBlue, -0.2, 0.95, 0.25, -0.9);
   limb(0.11, 0.6, darkBlue, 0.2, 0.95, 0.25, -0.9);
   limb(0.09, 0.55, blue, -0.32, 1.45, -0.15, -1.1);
-  limb(0.09, 0.55, blue, 0.32, 1.45, -0.15, -1.1);
+  // right arm = slap arm: pivoted at the shoulder so it can visibly swing
+  slapArmG = new THREE.Group();
+  slapArmG.position.set(0.32, 1.5, -0.1);
+  const slapArmGeo = new THREE.CylinderGeometry(0.09, 0.08, 0.55, 8);
+  slapArmGeo.translate(0, -0.275, 0);
+  slapArmG.add(new THREE.Mesh(slapArmGeo, blue));
+  const slapHand = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), skin);
+  slapHand.position.set(0, -0.6, 0); slapArmG.add(slapHand);
+  slapArmG.rotation.x = -1.1;
+  g.add(slapArmG);
   const shadow = blobShadow(0, 0, 1.1); g.add(shadow); shadow.position.set(0, 0.03, 0);
   scene.add(g);
   return g;
@@ -547,6 +557,18 @@ let stats = { plate: 0, wrongway: 0, signal: 0, indicator: 0, innocent: 0 };
 let legIdx = 0, remaining = 930, elapsed = 0, spawnT = 1, slapCd = 0, shakeT = 0;
 let best = parseInt(localStorage.getItem('dhakaSlapRideBest') || '0', 10);
 let target = null;
+let slapT = 0, slapHitDone = false, slapVictim = null;
+const bursts = [];
+function spawnBurst(p){
+  const mat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 1 });
+  for(let i = 0; i < 8; i++){
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), mat);
+    s.position.set(p.x, 1.2, p.z);
+    const a = Math.random()*Math.PI*2, v = 2 + Math.random()*2;
+    s.userData = { vx: Math.cos(a)*v, vy: 2 + Math.random()*2, vz: Math.sin(a)*v, life: 0.35 };
+    scene.add(s); bursts.push(s);
+  }
+}
 
 const $ = id => document.getElementById(id);
 function showPopup(pts, taunt){
@@ -675,10 +697,13 @@ function doSlap(){
   if(state !== 'play' || paused) return;
   if(slapCd > 0) return;
   slapCd = 0.45;
+  slapT = 0.38; slapHitDone = false; slapVictim = null; // hand swing starts on every press
   const t = findTarget();
   if(!t) return;
   slaps++;
   t.slapped = true;
+  slapVictim = t;
+  t.wobble = 0.35; // slapped rickshaw wobbles
   sSlap();
   if(t.offence){
     const pts = POINTS[t.offence];
@@ -859,6 +884,7 @@ function update(dt){
       }
     }
     g.position.x += (LANES[r.lane] - g.position.x) * Math.min(1, dt*8);
+    if(r.wobble > 0){ r.wobble -= dt; g.rotation.z = Math.sin(r.wobble*40)*0.12; } else g.rotation.z = 0;
     // crash check
     if(r.lane === player.lane && Math.abs(g.position.z) < 1.3){
       doCrash(r);
@@ -878,6 +904,33 @@ function update(dt){
   } else {
     $('prompt').style.display = 'none';
     ring.visible = false;
+  }
+
+  // hand slap swing animation + impact bursts
+  if(slapArmG){
+    if(slapT > 0){
+      slapT -= dt;
+      const p = 1 - slapT / 0.38;
+      if(p < 0.35){
+        const k = p / 0.35;
+        slapArmG.rotation.x = -1.1 + k * 1.9;
+        slapArmG.rotation.z = -k * 0.7;
+      } else if(p < 0.55){
+        const k = (p - 0.35) / 0.2;
+        slapArmG.rotation.x = 0.8 - k * 1.9;
+        slapArmG.rotation.z = -0.7 + k * 0.7;
+        if(!slapHitDone && slapVictim && slapVictim.mesh){ slapHitDone = true; spawnBurst(slapVictim.mesh.position); }
+      } else { slapArmG.rotation.x = -1.1; slapArmG.rotation.z = 0; }
+    } else { slapArmG.rotation.x = -1.1; slapArmG.rotation.z = 0; }
+  }
+  for(let i = bursts.length - 1; i >= 0; i--){
+    const b = bursts[i];
+    b.userData.life -= dt;
+    if(b.userData.life <= 0){ scene.remove(b); bursts.splice(i, 1); continue; }
+    b.position.x += b.userData.vx * dt;
+    b.position.y += b.userData.vy * dt;
+    b.position.z += b.userData.vz * dt;
+    b.material.opacity = b.userData.life / 0.35;
   }
 
   // distance / legs
