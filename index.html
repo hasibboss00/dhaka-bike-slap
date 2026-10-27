@@ -520,6 +520,7 @@ function blobShadow(x, z, r){
 // ================= PLAYER BIKE + RIDER =================
 const LANES = [-2.2, 0, 2.2];
 const BIKE_PLATE = 'ঢাকা মেট্রো-খ ০৭-৯৯১১';
+let rightArmPivot = null; // shoulder pivot of the rider's RIGHT arm (for the sideways slap flick)
 function buildBike(){
   const g = new THREE.Group();
   const red = new THREE.MeshStandardMaterial({ color: 0x9e2b25, roughness: 0.35, metalness: 0.45 });
@@ -566,11 +567,11 @@ function buildBike(){
   helmet.position.set(0, 1.82, 0.05); helmet.scale.y = 0.85; g.add(helmet);
   const visor = box(0.42, 0.12, 0.05, 0x0d0d0d, 0, 1.8, -0.2); g.add(visor);
   const pack = box(0.45, 0.55, 0.2, 0x222222, 0, 1.3, 0.38); g.add(pack);
-  function limb(r, h, mat, x, y, z, rx){
+  function limb(r, h, mat, x, y, z, rx, parent){
     const geo = new THREE.CylinderGeometry(r, r*0.85, h, 8);
     geo.translate(0, -h/2, 0);
     const m = new THREE.Mesh(geo, mat);
-    m.position.set(x, y, z); m.rotation.x = rx || 0; g.add(m); return m;
+    m.position.set(x, y, z); m.rotation.x = rx || 0; (parent || g).add(m); return m;
   }
   limb(0.13, 0.55, darkBlue, -0.2, 0.95, 0.25, -0.9);
   limb(0.13, 0.55, darkBlue, 0.2, 0.95, 0.25, -0.9);
@@ -581,10 +582,18 @@ function buildBike(){
   // left arm with elbow bend
   limb(0.10, 0.32, blue, -0.32, 1.45, -0.15, -0.7);
   limb(0.09, 0.3, blue, -0.32, 1.2, 0.06, -1.4);
-  // right arm: rests on the handlebar, exactly like the left arm — the rider's
-  // hands stay on the bars at all times, including during a slap
-  limb(0.10, 0.32, blue, 0.32, 1.45, -0.15, -0.7);
-  limb(0.09, 0.3, blue, 0.32, 1.2, 0.06, -1.4);
+  // right arm: shoulder-pivoted group, so ONLY it can flick sideways on a slap
+  // press (left arm stays on the handlebar). At pivot rotation 0 the arm sits
+  // in exactly the same resting pose as the left arm; the forearm offset
+  // (0, -0.25, 0.21) is the elbow position relative to the shoulder.
+  rightArmPivot = new THREE.Group();
+  rightArmPivot.position.set(0.32, 1.45, -0.15);
+  g.add(rightArmPivot);
+  limb(0.10, 0.32, blue, 0, 0, 0, -0.7, rightArmPivot);
+  limb(0.09, 0.3, blue, 0, -0.25, 0.21, -1.4, rightArmPivot);
+  const rHand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), skin);
+  rHand.position.set(0, -0.30, 0.51);
+  rightArmPivot.add(rHand);
   g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
   scene.add(g);
   return g;
@@ -739,6 +748,8 @@ let rickshaws = [];
 let score = 0, hearts = 3, plates = 0, slaps = 0, crashes = 0, totalDist = 0;
 let stats = { plate: 0, wrongway: 0, signal: 0, indicator: 0, innocent: 0 };
 let legIdx = 0, remaining = 930, elapsed = 0, spawnT = 1, slapCd = 0, shakeT = 0;
+let flickT = 0; // seconds left of the quick sideways right-arm flick
+const FLICK_LEN = 0.22, FLICK_ANGLE = 1.5; // flick duration + pivot swing (rad, ~86 deg)
 let best = parseInt(localStorage.getItem('dhakaSlapRideBest') || '0', 10);
 let target = null;
 let rage = 0;
@@ -824,6 +835,7 @@ function startGame(stIdx){
   score = 0; hearts = 3; plates = 0; slaps = 0; crashes = 0; totalDist = 0;
   stats = { plate: 0, wrongway: 0, signal: 0, indicator: 0, innocent: 0 };
   elapsed = 0; spawnT = 1; slapCd = 0; shakeT = 0; target = null;
+  flickT = 0; if(rightArmPivot) rightArmPivot.rotation.z = 0;
   rage = 0; rageFullPlayed = false; updateRage();
   player.lane = 1; player.x = 0;
   state = 'play'; paused = false;
@@ -916,9 +928,11 @@ function doSlap(){
   if(state !== 'play' || paused) return;
   if(cineT > 0) return;
   if(slapCd > 0) return;
-  const t = findTarget();
-  if(!t) return; // no prompt visible: the slap does nothing at all
+  // quick sideways right-arm flick: fires on the press itself, hit or miss
+  flickT = FLICK_LEN;
   slapCd = 0.45;
+  const t = findTarget();
+  if(!t) return; // no prompt visible: the press scores nothing, but the flick still played
   slaps++;
   t.slapped = true;
   sSlap();
@@ -1034,6 +1048,18 @@ function update(dt){
   const scroll = speedKmh * 0.27;
   currentScroll = scroll;
   if(slapCd > 0) slapCd -= dt;
+  // sideways right-arm flick: out fast (~0.07s), brief hold, back to rest.
+  // Camera does not move; the left arm never leaves the handlebar.
+  if(rightArmPivot){
+    if(flickT > 0){
+      flickT -= dt;
+      const p = 1 - Math.max(0, flickT) / FLICK_LEN; // 0 → 1 over the flick
+      const curve = p < 0.32 ? p / 0.32 : 1 - (p - 0.32) / 0.68;
+      rightArmPivot.rotation.z = FLICK_ANGLE * Math.max(0, Math.min(1, curve));
+    } else {
+      rightArmPivot.rotation.z = 0;
+    }
+  }
   if(shakeT > 0) shakeT -= dt;
   if(cineT > 0){
     cineT -= dt;
