@@ -191,6 +191,7 @@ function initVoice(){
 }
 function playVoice(key){
   if(!soundOn) return;
+  voiceSeqToken++;
   try{
     initVoice();
     const a = voiceClips[key];
@@ -203,8 +204,33 @@ function playVoice(key){
   }catch(e){}
 }
 function stopAllVoice(){
-  for(const k in voiceClips){ try{ voiceClips[k].pause(); }catch(e){} }
+  voiceSeqToken++;
+  for(const k in voiceClips){ try{ voiceClips[k].pause(); voiceClips[k].onended = null; }catch(e){} }
   currentVoice = null;
+}
+let voiceSeqToken = 0;
+// Play voice clips one after another: each starts when the previous ends.
+// Any direct playVoice/stopAllVoice call cancels a pending sequence.
+function playVoiceSeq(keys){
+  if(!soundOn) return;
+  const token = ++voiceSeqToken;
+  let i = 0;
+  const step = ()=>{
+    if(token !== voiceSeqToken) return;
+    if(i >= keys.length) return;
+    try{
+      initVoice();
+      const a = voiceClips[keys[i++]];
+      if(!a){ step(); return; }
+      if(currentVoice && currentVoice !== a){ try{ currentVoice.pause(); }catch(e){} }
+      currentVoice = a;
+      a.currentTime = 0;
+      a.onended = ()=>{ if(token === voiceSeqToken) step(); };
+      const pr = a.play();
+      if(pr && pr.catch) pr.catch(()=>{});
+    }catch(e){}
+  };
+  step();
 }
 
 // ================= MEME SOUNDS (supplied by Fayzur, Oct 2026) =================
@@ -237,7 +263,7 @@ function playSfx(key){
     if(p && p.catch) p.catch(()=>{});
   }catch(e){}
 }
-const START_POOL = ['meme-chalo', 'meme-sulululu', 'meme-kuchu-puchu'];
+const START_POOL = ['meme-chalo', 'meme-sulululu', 'meme-kuchu-puchu']; // kept for reference — startGame now plays a fixed chalo -> gribera sequence
 const TAUNT_POOL = ['meme-gribera', 'meme-kyu-re', 'meme-phir-teri', 'meme-ttaakaa'];
 const INNOCENT_POOL = ['meme-amar-vul', 'meme-please-khoma', 'meme-aayein', 'meme-gopgop'];
 const CRASH_POOL = ['meme-faaah', 'meme-anime-ahh', 'meme-baap-re', 'meme-oh-my-god', 'meme-molom'];
@@ -918,7 +944,7 @@ function clearRickshaws(){
 }
 function startGame(stIdx){
   sClick();
-  { const mk = pickMeme(START_POOL); if(mk) playVoice(mk); }
+  playVoiceSeq(['meme-chalo', 'meme-gribera']); // start: chaloooo, then goriber bhalo acho
   clearRickshaws();
   legIdx = stIdx;
   remaining = LEGS[legIdx].dist;
