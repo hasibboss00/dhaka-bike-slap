@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Dhaka Ride: Chada Chase!</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 <style>
   html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000;font-family:sans-serif;-webkit-user-select:none;user-select:none}
   #game{position:fixed;inset:0}
@@ -70,6 +71,7 @@
     <span id="hud-time">⏱ ৩:০০</span>
     <span id="hud-hearts">♥♥♥</span>
     <span id="hud-plates">স্টল: 0</span>
+    <span id="hud-net" style="display:none"></span>
     <span><button class="hudbtn" id="pauseBtn">⏸ বিরতি</button> <button class="hudbtn" id="soundBtn">🔊 শব্দ</button></span>
   </div>
   <div class="legbar" id="hud-leg">🚨 পুলিশ: ৪০m পেছনে | তুমি: ৫০ km/h | পুলিশ: ৫০ km/h</div>
@@ -96,7 +98,33 @@
   <p>দুইজনেই স্পিড বাড়াতে-কমাতে পারবে। রিকশায় ধাক্কা খেলে চাঁদাবাজের জীবন যাবে, পুলিশের গতি কমে যাবে।</p>
   <p style="color:#ffd700;font-weight:bold">🧑 চাঁদাবাজ: লেন A / D • স্পিড W / S • চাঁদা Space<br>🚨 পুলিশ: লেন ← → • স্পিড ↑ ↓ • মোবাইলে দুই পাশের বোতাম</p>
   <p id="menu-best" style="color:#fff"></p>
-  <button id="startBtn">▶ START</button>
+  <div id="modePick" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <button class="bigBtn" id="localBtn" style="margin-top:0">🎮 Ek device-e 2 jon</button>
+    <button class="bigBtn" id="onlineBtn" style="margin-top:0;background:#2471a3">🌐 Friend-er sathe online</button>
+  </div>
+  <div id="onlinePanel" style="display:none;max-width:560px">
+    <p style="color:#ffd700;font-weight:bold">Tumi kon role-e khelbe?</p>
+    <div>
+      <button class="stationBtn roleBtn" data-role="collector">🧑 Ami Chada baj</button>
+      <button class="stationBtn roleBtn" data-role="police">🚨 Ami Police</button>
+    </div>
+    <p><button class="bigBtn" id="createRoomBtn">Room kholo</button></p>
+    <p>— ba —</p>
+    <p><input id="joinCode" placeholder="Room code (6 okkhor)" maxlength="6" style="padding:12px;font-size:18px;border-radius:10px;border:0;text-align:center;text-transform:uppercase;width:200px"> <button class="bigBtn" id="joinBtn" style="margin-top:0;background:#2471a3">Join koro</button></p>
+    <p id="netStatus"></p>
+    <p><button class="bigBtn" id="onlineBackBtn" style="margin-top:0;background:#555">← Fere jao</button></p>
+  </div>
+  <div id="lobbyBox" style="display:none;max-width:560px">
+    <p style="font-size:15px">Room code:</p>
+    <p id="lobbyCode" style="font-size:42px;font-weight:bold;color:#ffd700;letter-spacing:6px;margin:4px 0"></p>
+    <p><input id="inviteLink" readonly style="width:100%;padding:10px;font-size:13px;border-radius:8px;border:0;text-align:center"></p>
+    <p><button class="bigBtn" id="copyLinkBtn" style="margin-top:8px">🔗 Link copy koro</button></p>
+    <p id="lobbyRoles"></p>
+    <p id="lobbyStatus"></p>
+    <p><button class="bigBtn" id="swapRoleBtn" style="background:#2471a3">🔄 Role bodlao</button>
+    <button class="bigBtn" id="lobbyStartBtn" style="display:none">▶ START</button>
+    <button class="bigBtn" id="lobbyCancelBtn" style="background:#555">Cancel</button></p>
+  </div>
 </div>
 
 <div class="overlay" id="pauseOv">
@@ -868,6 +896,7 @@ let elapsed = 0, spawnT = 1, stallT = 2, grabCd = 0, shakeT = 0;
 let gap = 40, timeLeft = 180, sirenT = 0, policeStun = 0, caughtBy = '';
 const GAP_MAX = 55, CATCH_DIST = 3.5, MATCH_LEN = 180;
 let speedP1 = 50, speedP2 = 50, targetP1 = 50, targetP2 = 50;
+let nextEntId = 1;
 let flickT = 0; // seconds left of the quick sideways grab flick
 let flickSide = 'R'; // 'R' = right arm flicks (right-side stall), 'L' = left arm flicks
 let stalls = [];
@@ -951,10 +980,19 @@ function startGame(){
   $('over').style.display = 'none';
   $('pauseOv').style.display = 'none';
   $('hud').style.display = 'block';
-  $('slapBtn').style.display = 'block';
   $('rageWrap').style.display = 'block';
-  $('ctlP1').style.display = 'block';
-  $('ctlP2').style.display = 'block';
+  if(net.mode !== 'off'){
+    $('hud-net').style.display = 'inline';
+    $('hud-net').textContent = '🌐 Tumi: ' + roleName(net.myRole);
+    $('slapBtn').style.display = net.myRole === 'collector' ? 'block' : 'none';
+    $('ctlP1').style.display = net.myRole === 'collector' ? 'block' : 'none';
+    $('ctlP2').style.display = net.myRole === 'police' ? 'block' : 'none';
+  } else {
+    $('hud-net').style.display = 'none';
+    $('slapBtn').style.display = 'block';
+    $('ctlP1').style.display = 'block';
+    $('ctlP2').style.display = 'block';
+  }
   $('prompt').style.display = 'none';
   $('targetMarker').style.display = 'none';
   endCinematic();
@@ -992,13 +1030,15 @@ function gameOver(result){
     ['মোবাইল', stats.mobile], ['গরিব (−)', stats.gorib], ['ধাক্কা', crashes]
   ];
   $('stats-grid').innerHTML = cells.map(c=>'<div class="cell"><b>' + c[1] + '</b><span>' + c[0] + '</span></div>').join('');
+  if(net.isHost) sendSnap();
   $('over').style.display = 'flex';
 }
-function togglePause(){
+function togglePause(fromNet){
   if(state !== 'play') return;
   paused = !paused;
   $('pauseOv').style.display = paused ? 'flex' : 'none';
   sClick();
+  if(!fromNet && net.mode !== 'off') netSend({ t:'pause' });
 }
 
 // ================= SPAWNING =================
@@ -1007,6 +1047,7 @@ function spawnRickshaw(){
   const lane = Math.floor(Math.random()*3);
   const isWrong = Math.random() < 0.15;
   const r = {
+    id: nextEntId++,
     mesh: built.group, indL: built.indL, indR: built.indR, lane: lane, targetLane: lane,
     speed: isWrong ? -4 : 5 + Math.random()*2,
     blink: 0, legalChanger: false
@@ -1082,7 +1123,7 @@ function spawnStall(){
   else type = STALL_TYPES[4];
   const built = buildStall(type, side);
   built.group.position.set(side * STALL_X, 0.25, -95);
-  stalls.push({ group: built.group, cashBox: built.cashBox, type: type, side: side, collected: false });
+  stalls.push({ group: built.group, cashBox: built.cashBox, type: type, side: side, collected: false, id: nextEntId++ });
 }
 function spawnMoneyBag(s){
   const m = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, 0.15),
@@ -1133,6 +1174,7 @@ function doGrab(){
     { const mk = pickMeme(TAUNT_POOL); if(mk) playVoice(mk); }
     addOffenceLabel(t.type.name + ' +৳' + t.type.money, '');
   }
+  netSend({ t:'ev', k:'grab', side: flickSide, stall: t.id, innocent: t.type.id === 'gorib', label: t.type.id === 'gorib' ? 'গরিবের থেকে নিলা! −৳৩০' : (t.type.name + ' +৳' + t.type.money) });
 }
 function doCrash(r){
   hearts--;
@@ -1145,6 +1187,7 @@ function doCrash(r){
   shakeT = 0.4;
   scene.remove(r.mesh);
   rickshaws.splice(rickshaws.indexOf(r), 1);
+  netSend({ t:'ev', k:'crash1' });
   if(hearts <= 0) gameOver('busted');
 }
 function doPoliceCrash(r){
@@ -1156,6 +1199,7 @@ function doPoliceCrash(r){
   addOffenceLabel('পুলিশ রিকশায় ধাক্কা খাইলো!', 'bad');
   scene.remove(r.mesh);
   rickshaws.splice(rickshaws.indexOf(r), 1);
+  netSend({ t:'ev', k:'crash2' });
 }
 
 // ================= INPUT =================
@@ -1177,8 +1221,9 @@ function speedP2Step(d){
   targetP2 = Math.max(30, Math.min(80, targetP2 + d));
   sClick();
 }
-$('startBtn').addEventListener('click', ()=>startGame());
+
 $('againBtn').addEventListener('click', ()=>{
+  netCleanup(); showModes();
   $('over').style.display = 'none';
   $('menu').style.display = 'flex';
   $('hud').style.display = 'none';
@@ -1194,24 +1239,24 @@ $('soundBtn').addEventListener('click', ()=>{
 });
 $('slapBtn').addEventListener('pointerdown', (e)=>{ e.preventDefault(); doGrab(); });
 document.querySelectorAll('#ctlP1 button').forEach(b=>{
-  b.addEventListener('pointerdown', (e)=>{ e.preventDefault(); const a = b.dataset.p1; if(a==='left') moveLane(-1); else if(a==='right') moveLane(1); else if(a==='up') speedP1Step(6); else if(a==='down') speedP1Step(-6); });
+  b.addEventListener('pointerdown', (e)=>{ e.preventDefault(); const a = b.dataset.p1; if(a==='left') roleAct('collector', 'l1'); else if(a==='right') roleAct('collector', 'r1'); else if(a==='up') roleAct('collector', 'u1'); else if(a==='down') roleAct('collector', 'd1'); });
 });
 document.querySelectorAll('#ctlP2 button').forEach(b=>{
-  b.addEventListener('pointerdown', (e)=>{ e.preventDefault(); const a = b.dataset.p2; if(a==='left') movePoliceLane(-1); else if(a==='right') movePoliceLane(1); else if(a==='up') speedP2Step(6); else if(a==='down') speedP2Step(-6); });
+  b.addEventListener('pointerdown', (e)=>{ e.preventDefault(); const a = b.dataset.p2; if(a==='left') roleAct('police', 'l2'); else if(a==='right') roleAct('police', 'r2'); else if(a==='up') roleAct('police', 'u2'); else if(a==='down') roleAct('police', 'd2'); });
 });
 window.addEventListener('keydown', (e)=>{
-  if(e.key === ' '){ if(state === 'play' && !paused) doGrab(); e.preventDefault(); return; }
+  if(e.key === ' '){ roleAct('collector', 'grab'); e.preventDefault(); return; }
   if(e.key === 'p' || e.key === 'P'){ togglePause(); return; }
   if(state !== 'play' || paused) return;
   const k = e.key.toLowerCase();
-  if(k === 'a') moveLane(-1);
-  else if(k === 'd') moveLane(1);
-  else if(k === 'w') speedP1Step(6);
-  else if(k === 's') speedP1Step(-6);
-  else if(e.key === 'ArrowLeft') movePoliceLane(-1);
-  else if(e.key === 'ArrowRight') movePoliceLane(1);
-  else if(e.key === 'ArrowUp') speedP2Step(6);
-  else if(e.key === 'ArrowDown') speedP2Step(-6);
+  if(k === 'a') roleAct('collector', 'l1');
+  else if(k === 'd') roleAct('collector', 'r1');
+  else if(k === 'w') roleAct('collector', 'u1');
+  else if(k === 's') roleAct('collector', 'd1');
+  else if(e.key === 'ArrowLeft') roleAct('police', 'l2');
+  else if(e.key === 'ArrowRight') roleAct('police', 'r2');
+  else if(e.key === 'ArrowUp') roleAct('police', 'u2');
+  else if(e.key === 'ArrowDown') roleAct('police', 'd2');
   if(['arrowleft','arrowright','arrowup','arrowdown'].includes(k)) e.preventDefault();
 });
 let ts = null;
@@ -1223,11 +1268,250 @@ renderer.domElement.addEventListener('touchend', (e)=>{
   if(!ts) return;
   const t = e.changedTouches[0];
   const dx = t.clientX - ts.x, dy = t.clientY - ts.y;
-  if(Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy)) moveLane(dx > 0 ? 1 : -1);
-  else if(Math.abs(dx) < 12 && Math.abs(dy) < 12) doGrab();
+  if(Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy)) roleAct('collector', dx > 0 ? 'r1' : 'l1');
+  else if(Math.abs(dx) < 12 && Math.abs(dy) < 12) roleAct('collector', 'grab');
   ts = null;
 }, {passive:true});
 $('menu-best').textContent = 'সেরা: ৳' + best;
+
+// ================= ONLINE MULTIPLAYER (PeerJS P2P) =================
+// Room creator (host) runs the simulation; the guest sends inputs and
+// mirrors the host's state snapshots. No game server needed — PeerJS's
+// free public broker only introduces the two browsers.
+const net = { mode: 'off', isHost: false, peer: null, conn: null, code: '', myRole: 'collector', peerRole: 'police', lastSnap: null, bcT: 0 };
+const NET_PREFIX = 'dhaka-chada-';
+let pickedRole = 'collector';
+function roleName(r){ return r === 'collector' ? 'চাঁদাবাজ' : 'পুলিশ'; }
+function netId(code){ return NET_PREFIX + String(code).toLowerCase(); }
+function makeCode(){ const ch = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for(let i = 0; i < 6; i++) s += ch[Math.floor(Math.random() * ch.length)]; return s; }
+function inviteLink(code){ return location.origin + location.pathname + '?room=' + code; }
+function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
+function showModes(){ $('lobbyBox').style.display = 'none'; $('onlinePanel').style.display = 'none'; $('modePick').style.display = 'flex'; }
+function showOnlinePanel(){ $('modePick').style.display = 'none'; $('onlinePanel').style.display = 'block'; $('lobbyBox').style.display = 'none'; }
+function showLobby(){ $('modePick').style.display = 'none'; $('onlinePanel').style.display = 'none'; $('lobbyBox').style.display = 'block'; }
+function renderLobby(){
+  $('lobbyRoles').innerHTML = 'Tumi: <b>' + roleName(net.myRole) + '</b> • Friend: <b>' + roleName(net.peerRole) + '</b>';
+  $('lobbyCode').textContent = net.code;
+  $('inviteLink').value = inviteLink(net.code);
+  $('swapRoleBtn').style.display = net.isHost ? 'inline-block' : 'none';
+}
+function netCleanup(){
+  net.mode = 'off'; net.isHost = false;
+  try{ if(net.conn) net.conn.close(); }catch(e){}
+  try{ if(net.peer) net.peer.destroy(); }catch(e){}
+  net.peer = null; net.conn = null; net.code = ''; net.lastSnap = null;
+}
+function netEndMatch(msg){
+  if(state !== 'play') return;
+  state = 'over'; paused = false;
+  $('pauseOv').style.display = 'none';
+  $('slapBtn').style.display = 'none'; $('ctlP1').style.display = 'none'; $('ctlP2').style.display = 'none';
+  $('prompt').style.display = 'none'; $('rageWrap').style.display = 'none'; $('targetMarker').style.display = 'none';
+  $('over-title').textContent = '📡 ' + msg;
+  $('over-rank').textContent = '';
+  $('over-score').textContent = 'টাকা: ৳' + score + ' | সেরা: ৳' + best;
+  $('stats-grid').innerHTML = '';
+  $('over').style.display = 'flex';
+}
+function netWireConn(conn){
+  net.conn = conn;
+  conn.on('data', netOnData);
+  conn.on('close', ()=>{
+    if(net.mode === 'off') return;
+    net.conn = null;
+    if(state === 'play'){ netEndMatch('Friend disconnect hoye geche!'); }
+    else { $('lobbyStartBtn').style.display = 'none'; showOnlinePanel(); $('netStatus').textContent = 'Friend chole geche.'; }
+  });
+  conn.on('error', ()=>{});
+}
+function createRoom(){
+  if(typeof Peer === 'undefined'){ $('netStatus').textContent = 'Online service load hoy nai — net check kore reload dao.'; return; }
+  netCleanup();
+  const code = makeCode();
+  net.code = code; net.isHost = true; net.mode = 'host';
+  net.myRole = pickedRole; net.peerRole = pickedRole === 'collector' ? 'police' : 'collector';
+  showLobby(); renderLobby();
+  $('lobbyStatus').textContent = 'Room khultesi…';
+  net.peer = new Peer(netId(code));
+  net.peer.on('open', ()=>{ $('lobbyStatus').textContent = 'Friend-er jonno wait kortesi… link-ta pathao!'; });
+  net.peer.on('connection', (conn)=>{
+    netWireConn(conn);
+    conn.on('open', ()=>{
+      $('lobbyStartBtn').style.display = 'inline-block';
+      $('lobbyStatus').textContent = 'Friend connected! START chaple khela shuru hobe.';
+      netSend({ t:'welcome', hostRole: net.myRole, guestRole: net.peerRole });
+      renderLobby();
+    });
+  });
+  net.peer.on('error', (err)=>{
+    if(state !== 'menu') return;
+    if(err && err.type === 'unavailable-id'){ createRoom(); return; }
+    $('lobbyStatus').textContent = 'Room khola jay nai — abar try koro.';
+  });
+}
+function joinRoom(code){
+  if(typeof Peer === 'undefined'){ $('netStatus').textContent = 'Online service load hoy nai — net check kore reload dao.'; return; }
+  code = String(code || '').trim().toUpperCase();
+  if(!code){ $('netStatus').textContent = 'Code dao!'; return; }
+  netCleanup();
+  net.code = code; net.isHost = false; net.mode = 'guest';
+  net.myRole = 'police'; net.peerRole = 'collector';
+  showLobby(); renderLobby();
+  $('lobbyStatus').textContent = 'Host-er sathe connect hocche…';
+  net.peer = new Peer();
+  net.peer.on('open', ()=>{
+    const conn = net.peer.connect(netId(code), { reliable: true });
+    netWireConn(conn);
+    conn.on('open', ()=>{ $('lobbyStatus').textContent = 'Connected! Host START korle khela shuru hobe.'; });
+  });
+  net.peer.on('error', (err)=>{
+    if(state !== 'menu') return;
+    showOnlinePanel();
+    $('netStatus').textContent = (err && err.type === 'peer-unavailable') ? 'Room pai nai — code-ta thik ache to?' : 'Connect hoy nai — abar try koro.';
+  });
+}
+function swapRoles(){
+  if(!net.isHost) return;
+  const t = net.myRole; net.myRole = net.peerRole; net.peerRole = t;
+  renderLobby();
+  netSend({ t:'roles', hostRole: net.myRole, guestRole: net.peerRole });
+}
+function startOnline(){
+  startGame();
+  netSend({ t:'start' });
+}
+function netOnData(d){
+  if(!d || typeof d !== 'object') return;
+  if(d.t === 'in'){ applyAct(d.a); return; }
+  if(d.t === 'st'){ net.lastSnap = d; return; }
+  if(d.t === 'ev'){ netOnEvent(d); return; }
+  if(d.t === 'welcome'){ net.myRole = d.guestRole; net.peerRole = d.hostRole; renderLobby(); return; }
+  if(d.t === 'roles'){ if(net.isHost) return; net.myRole = d.guestRole; net.peerRole = d.hostRole; renderLobby(); return; }
+  if(d.t === 'start'){ if(net.mode === 'guest') startGame(); return; }
+  if(d.t === 'pause'){ togglePause(true); return; }
+}
+function netOnEvent(d){
+  if(d.k === 'grab'){
+    flickSide = d.side; flickT = FLICK_LEN;
+    const s = stalls.find(o => o.id === d.stall); if(s) spawnMoneyBag(s);
+    sCoin();
+    { const mk = pickMeme(d.innocent ? INNOCENT_POOL : TAUNT_POOL); if(mk) playVoice(mk); }
+    if(d.label) addOffenceLabel(d.label, d.innocent ? 'bad' : '');
+    return;
+  }
+  if(d.k === 'crash1'){ sCrash(); playSfx('fart'); { const mk = pickMeme(CRASH_POOL); if(mk) playVoice(mk); } flashRed(); shakeT = 0.4; return; }
+  if(d.k === 'crash2'){ sCrash(); playSfx('fart'); { const mk = pickMeme(CRASH_POOL); if(mk) playVoice(mk); } addOffenceLabel('পুলিশ রিকশায় ধাক্কা খাইলো!', 'bad'); return; }
+}
+function sendSnap(){
+  netSend({ t:'st',
+    s1: Math.round(speedP1), s2: Math.round(speedP2), gap: Math.round(gap * 10) / 10,
+    tl: Math.round(timeLeft * 10) / 10, sc: score, he: hearts, sg: stallsGot,
+    l1: player.lane, x1: Math.round(player.x * 100) / 100, l2: police.lane, x2: Math.round(police.x * 100) / 100,
+    st: state, rs: caughtBy, el: Math.round(elapsed), di: Math.round(totalDist), be: best,
+    stl: stalls.map(s => [s.id, s.side, STALL_TYPES.indexOf(s.type), Math.round(s.group.position.z * 10) / 10, s.collected ? 1 : 0]),
+    rk: rickshaws.map(r => [r.id, r.lane, Math.round(r.mesh.position.x * 100) / 100, Math.round(r.mesh.position.z * 10) / 10, r.mesh.rotation.y > 2 ? 1 : 0])
+  });
+}
+function syncEnts(dt){
+  const s = net.lastSnap; if(!s) return;
+  const k = Math.min(1, dt * 14);
+  const seenS = {};
+  s.stl.forEach(a=>{
+    const id = a[0], side = a[1], ti = a[2];
+    seenS[id] = true;
+    let o = null;
+    for(const q of stalls) if(q.id === id){ o = q; break; }
+    if(!o){
+      const built = buildStall(STALL_TYPES[ti], side);
+      o = { group: built.group, cashBox: built.cashBox, type: STALL_TYPES[ti], side: side, collected: false, id: id };
+      stalls.push(o);
+    }
+    o.type = STALL_TYPES[ti]; o.side = side;
+    const tx = side * STALL_X, tz = a[3];
+    o.group.position.x += (tx - o.group.position.x) * k;
+    o.group.position.z += (tz - o.group.position.z) * k;
+    o.group.position.y = 0.25;
+    o.collected = !!a[4]; o.cashBox.visible = !o.collected;
+  });
+  for(let i = stalls.length - 1; i >= 0; i--){ if(!seenS[stalls[i].id]){ scene.remove(stalls[i].group); stalls.splice(i, 1); } }
+  const seenR = {};
+  s.rk.forEach(a=>{
+    const id = a[0];
+    seenR[id] = true;
+    let o = null;
+    for(const q of rickshaws) if(q.id === id){ o = q; break; }
+    if(!o){
+      const built = buildRickshaw();
+      o = { mesh: built.group, indL: built.indL, indR: built.indR, lane: a[1], id: id };
+      rickshaws.push(o);
+    }
+    o.lane = a[1];
+    o.mesh.position.x += (a[2] - o.mesh.position.x) * k;
+    o.mesh.position.z += (a[3] - o.mesh.position.z) * k;
+    o.mesh.rotation.y = a[4] ? Math.PI : 0;
+  });
+  for(let i = rickshaws.length - 1; i >= 0; i--){ if(!seenR[rickshaws[i].id]){ scene.remove(rickshaws[i].mesh); rickshaws.splice(i, 1); } }
+}
+function applySnap(dt){
+  const s = net.lastSnap; if(!s) return;
+  const k = Math.min(1, dt * 10);
+  speedP1 += (s.s1 - speedP1) * k; speedP2 += (s.s2 - speedP2) * k; speedKmh = speedP1;
+  gap += (s.gap - gap) * k; updateGap(); timeLeft = s.tl;
+  score = s.sc; hearts = s.he; stallsGot = s.sg;
+  player.lane = s.l1; police.lane = s.l2;
+  player.x += (s.x1 - player.x) * k; police.x += (s.x2 - police.x) * k;
+  totalDist = s.di; elapsed = s.el;
+  syncEnts(dt);
+  if(s.st === 'over' && state === 'play'){ elapsed = s.el; totalDist = s.di; score = s.sc; gameOver(s.rs || 'caught'); }
+}
+// ---- input routing: offline = both roles local; online = only my role ----
+function act(a){
+  if(net.mode === 'guest'){ netSend({ t:'in', a: a }); return; }
+  applyAct(a);
+}
+function applyAct(a){
+  if(a === 'l1') moveLane(-1);
+  else if(a === 'r1') moveLane(1);
+  else if(a === 'u1') speedP1Step(6);
+  else if(a === 'd1') speedP1Step(-6);
+  else if(a === 'grab') doGrab();
+  else if(a === 'l2') movePoliceLane(-1);
+  else if(a === 'r2') movePoliceLane(1);
+  else if(a === 'u2') speedP2Step(6);
+  else if(a === 'd2') speedP2Step(-6);
+}
+function roleAct(role, a){
+  if(net.mode !== 'off' && net.myRole !== role) return;
+  act(a);
+}
+// ---- menu wiring ----
+document.querySelectorAll('.roleBtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    pickedRole = b.dataset.role;
+    document.querySelectorAll('.roleBtn').forEach(x=>x.classList.toggle('sel', x === b));
+    sClick();
+  });
+});
+document.querySelectorAll('.roleBtn')[0].classList.add('sel');
+$('localBtn').addEventListener('click', ()=>{ netCleanup(); startGame(); });
+$('onlineBtn').addEventListener('click', ()=>{ showOnlinePanel(); });
+$('onlineBackBtn').addEventListener('click', ()=>{ showModes(); });
+$('createRoomBtn').addEventListener('click', createRoom);
+$('joinBtn').addEventListener('click', ()=>joinRoom($('joinCode').value));
+$('swapRoleBtn').addEventListener('click', swapRoles);
+$('lobbyStartBtn').addEventListener('click', startOnline);
+$('lobbyCancelBtn').addEventListener('click', ()=>{ netCleanup(); showModes(); });
+$('copyLinkBtn').addEventListener('click', ()=>{
+  const inp = $('inviteLink');
+  const done = ()=>{ $('lobbyStatus').textContent = 'Link copy hoye geche — friend-ke pathao!'; };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).then(done).catch(()=>{ inp.select(); document.execCommand('copy'); done(); }); }
+  else { inp.select(); document.execCommand('copy'); done(); }
+});
+// invite link: auto-open the join panel with the code filled in
+(function(){
+  const m = /[?&]room=([A-Za-z0-9]{4,8})/.exec(location.search);
+  if(m){ showOnlinePanel(); $('joinCode').value = m[1].toUpperCase(); joinRoom(m[1]); }
+})();
 
 // ================= UPDATE =================
 function scrollList(list, span, onRecycle){
@@ -1246,30 +1530,35 @@ function update(dt){
   if(state !== 'play' || paused) return;
   elapsed += dt;
   lastDt = dt;
-  // 2-player speed: each rider controls their own target speed; actual
-  // speed eases toward it. A police stun forces the police target down.
-  if(policeStun > 0){ policeStun -= dt; targetP2 = 35; }
-  speedP1 += (targetP1 - speedP1) * Math.min(1, dt*3);
-  speedP2 += (targetP2 - speedP2) * Math.min(1, dt*3);
-  speedKmh = speedP1;
-  const scroll = speedKmh * 0.27;
-  // chase gap: closes when the police is faster, opens when slower
-  gap -= (speedP2 - speedP1) * 0.27 * dt;
-  if(gap > GAP_MAX) gap = GAP_MAX;
-  // match timer: 3 minutes for the police to catch the collector
-  timeLeft -= dt;
-  if(timeLeft <= 0){ timeLeft = 0; updateHUD(); gameOver('escaped'); return; }
-  // caught? police alongside in the same lane
-  if(gap <= CATCH_DIST){
-    if(police.lane === player.lane){ updateHUD(); gameOver('caught'); return; }
-    gap = CATCH_DIST;
+  const isGuest = net.mode === 'guest';
+  if(isGuest) applySnap(dt);
+  let scroll = speedKmh * 0.27;
+  if(!isGuest){
+    // 2-player speed: each rider controls their own target speed; actual
+    // speed eases toward it. A police stun forces the police target down.
+    if(policeStun > 0){ policeStun -= dt; targetP2 = 35; }
+    speedP1 += (targetP1 - speedP1) * Math.min(1, dt*3);
+    speedP2 += (targetP2 - speedP2) * Math.min(1, dt*3);
+    speedKmh = speedP1;
+    scroll = speedKmh * 0.27;
+    // chase gap: closes when the police is faster, opens when slower
+    gap -= (speedP2 - speedP1) * 0.27 * dt;
+    if(gap > GAP_MAX) gap = GAP_MAX;
+    // match timer: 3 minutes for the police to catch the collector
+    timeLeft -= dt;
+    if(timeLeft <= 0){ timeLeft = 0; updateHUD(); gameOver('escaped'); return; }
+    // caught? police alongside in the same lane
+    if(gap <= CATCH_DIST){
+      if(police.lane === player.lane){ updateHUD(); gameOver('caught'); return; }
+      gap = CATCH_DIST;
+    }
+    updateGap();
+    // siren gets urgent when the police closes in
+    if(gap < 15){
+      sirenT -= dt;
+      if(sirenT <= 0){ sSiren(); sirenT = 2.2; }
+    } else sirenT = 0;
   }
-  updateGap();
-  // siren gets urgent when the police closes in
-  if(gap < 15){
-    sirenT -= dt;
-    if(sirenT <= 0){ sSiren(); sirenT = 2.2; }
-  } else sirenT = 0;
   currentScroll = scroll;
   if(grabCd > 0) grabCd -= dt;
   // sideways grab flick: out fast (~0.07s), brief hold, back to rest,
@@ -1338,6 +1627,7 @@ function update(dt){
     if(g.position.z > 15){ scene.remove(g); gantries.splice(i, 1); }
   });
 
+  if(!isGuest){
   // spawn rickshaws
   spawnT -= dt;
   if(spawnT <= 0){ spawnRickshaw(); spawnT = 1.4 + Math.random()*0.9; }
@@ -1375,15 +1665,18 @@ function update(dt){
     }
     if(g.position.z > 14){ scene.remove(g); rickshaws.splice(i, 1); }
   }
-
-  // stalls scroll + spawn + money bags
-  for(let i = stalls.length - 1; i >= 0; i--){
-    const s = stalls[i];
-    s.group.position.z += scroll * dt;
-    if(s.group.position.z > 14){ scene.remove(s.group); stalls.splice(i, 1); }
   }
-  stallT -= dt;
-  if(stallT <= 0){ spawnStall(); stallT = 1.7 + Math.random()*1.1; }
+
+  // stalls scroll + spawn (host only — the guest mirrors snapshots)
+  if(!isGuest){
+    for(let i = stalls.length - 1; i >= 0; i--){
+      const s = stalls[i];
+      s.group.position.z += scroll * dt;
+      if(s.group.position.z > 14){ scene.remove(s.group); stalls.splice(i, 1); }
+    }
+    stallT -= dt;
+    if(stallT <= 0){ spawnStall(); stallT = 1.7 + Math.random()*1.1; }
+  }
   for(let i = moneyBags.length - 1; i >= 0; i--){
     const b = moneyBags[i];
     b.t += dt;
@@ -1431,6 +1724,10 @@ function update(dt){
   camera.lookAt(0, 1.2, -12);
 
   updateHUD();
+  if(net.mode === 'host'){
+    net.bcT -= dt;
+    if(net.bcT <= 0){ sendSnap(); net.bcT = 0.05; }
+  }
 }
 
 // ================= LOOP =================
