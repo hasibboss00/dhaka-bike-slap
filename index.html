@@ -35,6 +35,13 @@
   #flash{position:fixed;inset:0;background:rgba(255,0,0,0.35);opacity:0;pointer-events:none;z-index:7}
   #slapBtn{display:none;position:fixed;right:18px;bottom:26px;z-index:8;width:110px;height:110px;border-radius:50%;background:#e74c3c;color:#fff;font-size:26px;font-weight:bold;border:5px solid #fff;box-shadow:0 6px 0 #922b21;cursor:pointer}
   #slapBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #922b21}
+  .tctl{display:none;position:fixed;bottom:16px;z-index:8;text-align:center;pointer-events:none}
+  .tctl .lbl{color:#fff;font-size:11px;font-weight:bold;text-shadow:1px 1px #000;margin-bottom:4px}
+  .tctl button{pointer-events:auto;width:52px;height:52px;margin:3px;border-radius:12px;border:3px solid #fff;background:rgba(0,0,0,.55);color:#fff;font-size:20px;font-weight:bold;touch-action:none}
+  .tctl button:active{background:rgba(255,255,255,.35)}
+  #ctlP1{left:10px}
+  #ctlP2{right:10px;bottom:152px}
+  #ctlP2 button{border-color:#ffd700}
   #slapBtn.armed{animation:btnGlow .45s infinite alternate}
   @keyframes btnGlow{from{box-shadow:0 0 0 3px #ffd700,0 0 14px 4px rgba(255,215,0,.7)}to{box-shadow:0 0 0 5px #ffd700,0 0 28px 8px rgba(255,215,0,1)}}
   .overlay{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,0.82);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;overflow-y:auto}
@@ -60,12 +67,12 @@
 <div class="hud" id="hud" style="display:none">
   <div class="topbar">
     <span id="hud-score">টাকা: ৳0</span>
-    <span id="hud-speed">৫০ km/h</span>
+    <span id="hud-time">⏱ ৩:০০</span>
     <span id="hud-hearts">♥♥♥</span>
     <span id="hud-plates">স্টল: 0</span>
     <span><button class="hudbtn" id="pauseBtn">⏸ বিরতি</button> <button class="hudbtn" id="soundBtn">🔊 শব্দ</button></span>
   </div>
-  <div class="legbar" id="hud-leg">শাহবাগ → কাটাবন | বাকি: 930m</div>
+  <div class="legbar" id="hud-leg">🚨 পুলিশ: ৪০m পেছনে | তুমি: ৫০ km/h | পুলিশ: ৫০ km/h</div>
 </div>
 
 <div id="prompt"><span>💰 চাঁদা নাও!</span></div>
@@ -73,7 +80,9 @@
 <div id="targetMarker"><div id="speechBubble"></div><div id="handIcon">✋</div></div>
 <div id="flash"></div>
 <button id="slapBtn">চাঁদা!</button>
-<div id="rageWrap"><span>🚨 পুলিশ অ্যালার্ট</span><div id="rageTrack"><div id="rageFill"></div></div></div>
+<div class="tctl" id="ctlP1"><div class="lbl">🧑 চাঁদাবাজ</div><div><button data-p1="up">▲</button></div><div><button data-p1="left">◀</button><button data-p1="right">▶</button></div><div><button data-p1="down">▼</button></div></div>
+<div class="tctl" id="ctlP2"><div class="lbl">🚨 পুলিশ</div><div><button data-p2="up">▲</button></div><div><button data-p2="left">◀</button><button data-p2="right">▶</button></div><div><button data-p2="down">▼</button></div></div>
+<div id="rageWrap"><span>🚨 পুলিশ দূরত্ব</span><div id="rageTrack"><div id="rageFill"></div></div></div>
 <div class="bar" id="barTop"></div>
 <div class="bar" id="barBot"></div>
 <div id="cineText">🚨 পুলিশ আইছে! চাঁদা ফেরত দে!</div>
@@ -81,19 +90,12 @@
 
 <div class="overlay" id="menu">
   <h1>ঢাকা রাইড: চাঁদা চেজ!</h1>
-  <h2>বাইকে চড়ে রাস্তার পাশের দোকান থেকে চাঁদা তোলো — পুলিশ আসার আগেই পালাও!</h2>
-  <p>স্টেশন বেছে নাও, তারপর START চাপো। দোকানের পাশের লেনে গিয়ে চাঁদা নাও:</p>
-  <p><b>চা স্টল ৳২০</b> • <b>সবজি ৳৫০</b> • <b>ফল ৳৮০</b> • <b>কাপড় ৳১৫০</b> • <b>মোবাইল ৳২০০</b></p>
-  <p>গরিব ফেরিওয়ালার থেকে নিলে −৳৩০। চাঁদা নিলে পুলিশ অ্যালার্ট বাড়বে — ১০০% হলে পুলিশ ধরবে, ১টা জীবন যাবে। রিকশায় ধাক্কা খেলেও জীবন যাবে।</p>
-  <p style="color:#ffd700;font-weight:bold">লেন: ← → বা A / D • চাঁদা: Space বা চাঁদা বোতাম • মোবাইলে সোয়াইপে লেন</p>
+  <h2>👥 ২ জন খেলবে — একজন চাঁদাবাজ, একজন পুলিশ!</h2>
+  <p>চাঁদাবাজ দোকান থেকে চাঁদা তুলবে, পুলিশ পেছন থেকে ধাওয়া করবে। <b>৩ মিনিটের</b> মধ্যে পুলিশ একই লেনে এসে ধরে ফেললে চাঁদাবাজ ধরা — না পারলে পালিয়ে যাবে!</p>
+  <p><b>চা স্টল ৳২০</b> • <b>সবজি ৳৫০</b> • <b>ফল ৳৮০</b> • <b>কাপড় ৳১৫০</b> • <b>মোবাইল ৳২০০</b> • গরিব ফেরিওয়ালা −৳৩০</p>
+  <p>দুইজনেই স্পিড বাড়াতে-কমাতে পারবে। রিকশায় ধাক্কা খেলে চাঁদাবাজের জীবন যাবে, পুলিশের গতি কমে যাবে।</p>
+  <p style="color:#ffd700;font-weight:bold">🧑 চাঁদাবাজ: লেন A / D • স্পিড W / S • চাঁদা Space<br>🚨 পুলিশ: লেন ← → • স্পিড ↑ ↓ • মোবাইলে দুই পাশের বোতাম</p>
   <p id="menu-best" style="color:#fff"></p>
-  <div>
-    <button class="stationBtn" data-st="0">শাহবাগ</button>
-    <button class="stationBtn" data-st="1">আগারগাঁও</button>
-    <button class="stationBtn" data-st="2">মিরপুর ১০</button>
-    <button class="stationBtn" data-st="3">উত্তরা</button>
-    <button class="stationBtn" data-st="4">মতিঝিল</button>
-  </div>
   <button id="startBtn">▶ START</button>
 </div>
 
@@ -616,12 +618,12 @@ const LANES = [-2.2, 0, 2.2];
 const BIKE_PLATE = 'ঢাকা মেট্রো-খ ০৭-৯৯১১';
 let rightArmPivot = null; // shoulder pivot of the rider's RIGHT arm (grab flick)
 let leftArmPivot = null; // shoulder pivot of the rider's LEFT arm (grab flick)
-function buildBike(){
+function buildBike(isPolice){
   const g = new THREE.Group();
-  const red = new THREE.MeshStandardMaterial({ color: 0x9e2b25, roughness: 0.35, metalness: 0.45 });
+  const red = new THREE.MeshStandardMaterial({ color: isPolice ? 0x24406b : 0x9e2b25, roughness: 0.35, metalness: 0.45 });
   const black = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6, metalness: 0.2 });
   const silver = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.35, metalness: 0.8 });
-  const body = box(0.55, 0.35, 1.6, 0x9e2b25, 0, 0.62, 0); g.add(body);
+  const body = box(0.55, 0.35, 1.6, isPolice ? 0x24406b : 0x9e2b25, 0, 0.62, 0); g.add(body);
   const tank = new THREE.Mesh(new THREE.SphereGeometry(0.32, 14, 10), red);
   tank.scale.set(0.85, 0.5, 1.0); tank.position.set(0, 0.85, -0.35); g.add(tank);
   const seat = box(0.45, 0.15, 0.7, 0x1a1a1a, 0, 0.82, 0.45); g.add(seat);
@@ -635,7 +637,7 @@ function buildBike(){
       const sp = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.66, 0.05), spokeMat);
       sp.position.set(0.08, 0.36, wz); sp.rotation.x = s * Math.PI / 3; g.add(sp);
     }
-    const fenderMat = new THREE.MeshStandardMaterial({ color: 0x9e2b25, roughness: 0.35, metalness: 0.45, side: THREE.DoubleSide });
+    const fenderMat = new THREE.MeshStandardMaterial({ color: isPolice ? 0x24406b : 0x9e2b25, roughness: 0.35, metalness: 0.45, side: THREE.DoubleSide });
     const fender = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.2, 12, 1, true, 0, Math.PI), fenderMat);
     fender.rotation.z = Math.PI/2; fender.position.set(0, 0.36, wz); g.add(fender);
   });
@@ -648,7 +650,7 @@ function buildBike(){
   });
   const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 10), silver);
   exhaust.rotation.x = Math.PI/2; exhaust.position.set(0.3, 0.4, 0.3); g.add(exhaust);
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.2), plateMat(BIKE_PLATE));
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.2), plateMat(isPolice ? 'POLICE' : BIKE_PLATE));
   plate.rotation.y = Math.PI; plate.position.set(0, 0.5, -0.95); g.add(plate);
   // rider
   const blue = new THREE.MeshStandardMaterial({ color: 0x1f5f8a, roughness: 0.8, metalness: 0 });
@@ -658,7 +660,7 @@ function buildBike(){
   const torso = new THREE.Mesh(torsoGeo, blue);
   torso.scale.z = 0.62; torso.position.set(0, 1.25, 0.1); g.add(torso);
   const chest = box(0.5, 0.18, 0.3, 0x1a5276, 0, 1.45, 0.08); g.add(chest);
-  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), new THREE.MeshStandardMaterial({ color: 0xb02721, roughness: 0.25, metalness: 0.15 }));
+  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), new THREE.MeshStandardMaterial({ color: isPolice ? 0xf2f2f2 : 0xb02721, roughness: 0.25, metalness: 0.15 }));
   helmet.position.set(0, 1.82, 0.05); helmet.scale.y = 0.85; g.add(helmet);
   const visor = box(0.42, 0.12, 0.05, 0x0d0d0d, 0, 1.8, -0.2); g.add(visor);
   const pack = box(0.45, 0.55, 0.2, 0x222222, 0, 1.3, 0.38); g.add(pack);
@@ -676,31 +678,43 @@ function buildBike(){
   g.add(box(0.14, 0.09, 0.26, 0x1a1a1a, 0.2, 0.26, 0.55));
   // left arm: shoulder-pivoted group, mirroring the right arm, so it can
   // flick sideways to grab from a left-side stall (rest pose identical)
-  leftArmPivot = new THREE.Group();
-  leftArmPivot.position.set(-0.32, 1.45, -0.15);
-  g.add(leftArmPivot);
-  limb(0.10, 0.32, blue, 0, 0, 0, -0.7, leftArmPivot);
-  limb(0.09, 0.3, blue, 0, -0.25, 0.21, -1.4, leftArmPivot);
+  const lPivot = new THREE.Group();
+  lPivot.position.set(-0.32, 1.45, -0.15);
+  g.add(lPivot);
+  limb(0.10, 0.32, blue, 0, 0, 0, -0.7, lPivot);
+  limb(0.09, 0.3, blue, 0, -0.25, 0.21, -1.4, lPivot);
   const lHand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), skin);
   lHand.position.set(0, -0.30, 0.51);
-  leftArmPivot.add(lHand);
+  lPivot.add(lHand);
+  if(!isPolice) leftArmPivot = lPivot;
   // right arm: shoulder-pivoted group, so it can flick sideways to grab
   // from a right-side stall. At pivot rotation 0 the arm sits
   // in exactly the same resting pose as the left arm; the forearm offset
   // (0, -0.25, 0.21) is the elbow position relative to the shoulder.
-  rightArmPivot = new THREE.Group();
-  rightArmPivot.position.set(0.32, 1.45, -0.15);
-  g.add(rightArmPivot);
-  limb(0.10, 0.32, blue, 0, 0, 0, -0.7, rightArmPivot);
-  limb(0.09, 0.3, blue, 0, -0.25, 0.21, -1.4, rightArmPivot);
+  const rPivot = new THREE.Group();
+  rPivot.position.set(0.32, 1.45, -0.15);
+  g.add(rPivot);
+  limb(0.10, 0.32, blue, 0, 0, 0, -0.7, rPivot);
+  limb(0.09, 0.3, blue, 0, -0.25, 0.21, -1.4, rPivot);
   const rHand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), skin);
   rHand.position.set(0, -0.30, 0.51);
-  rightArmPivot.add(rHand);
+  rPivot.add(rHand);
+  if(!isPolice) rightArmPivot = rPivot;
+  if(isPolice){
+    g.add(box(0.5, 0.08, 0.18, 0x111111, 0, 2.05, 0.05));
+    const rLight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.16), new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.9 }));
+    rLight.position.set(-0.13, 2.14, 0.05); g.add(rLight);
+    const bLight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.16), new THREE.MeshStandardMaterial({ color: 0x0044ff, emissive: 0x0044ff, emissiveIntensity: 0.9 }));
+    bLight.position.set(0.13, 2.14, 0.05); g.add(bLight);
+    g.userData.lights = { r: rLight, b: bLight };
+  }
   g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
   scene.add(g);
   return g;
 }
 const bike = buildBike();
+const policeBike = buildBike(true);
+policeBike.visible = false;
 
 // ================= RICKSHAWS =================
 const RICK_COLS = [0x1c4f74, 0x1a5c3a, 0x8e2f4c, 0x82241f, 0x115c4e];
@@ -846,24 +860,22 @@ const STALL_TYPES = [
 ];
 let state = 'menu', paused = false;
 let player = { lane: 1, x: 0 };
+let police = { lane: 1, x: 0 };
 let rickshaws = [];
 let score = 0, hearts = 3, stallsGot = 0, grabs = 0, crashes = 0, totalDist = 0;
 let stats = { cha: 0, sobji: 0, fol: 0, kapor: 0, mobile: 0, gorib: 0 };
-let legIdx = 0, remaining = 930, elapsed = 0, spawnT = 1, stallT = 2, grabCd = 0, shakeT = 0;
+let elapsed = 0, spawnT = 1, stallT = 2, grabCd = 0, shakeT = 0;
+let gap = 40, timeLeft = 180, sirenT = 0, policeStun = 0, caughtBy = '';
+const GAP_MAX = 55, CATCH_DIST = 3.5, MATCH_LEN = 180;
+let speedP1 = 50, speedP2 = 50, targetP1 = 50, targetP2 = 50;
 let flickT = 0; // seconds left of the quick sideways grab flick
 let flickSide = 'R'; // 'R' = right arm flicks (right-side stall), 'L' = left arm flicks
 let stalls = [];
 const moneyBags = [];
-let policePendingOver = false;
 const FLICK_LEN = 0.22, FLICK_ANGLE = 1.5; // flick duration + pivot swing (rad, ~86 deg)
 let best = parseInt(localStorage.getItem('dhakaChadaRideBest') || '0', 10);
 let target = null;
-let rage = 0;
-let rageFullPlayed = false;
-let cineT = 0;
-let cinePolicePlayed = false;
 let speedKmh = 50;
-const CINE_LEN = 2.6;
 
 const $ = id => document.getElementById(id);
 function addOffenceLabel(text, cls){
@@ -875,31 +887,8 @@ function addOffenceLabel(text, cls){
   while(feed.children.length > 3) feed.removeChild(feed.firstChild);
   setTimeout(()=>{ d.classList.add('fade'); setTimeout(()=>{ d.remove(); }, 450); }, 1100);
 }
-function updateRage(){ $('rageFill').style.width = rage + '%'; }
-function startPoliceChase(){
-  cineT = CINE_LEN;
-  cinePolicePlayed = false;
-  hearts--;
-  if(hearts <= 0) policePendingOver = true;
-  $('cineText').textContent = '🚨 পুলিশ আইছে! চাঁদা ফেরত দে!';
-  $('cinePts').textContent = '−১ ♥';
-  $('hud').style.display = 'none';
-  $('slapBtn').style.display = 'none';
-  $('rageWrap').style.display = 'none';
-  $('prompt').style.display = 'none';
-  $('targetMarker').style.display = 'none';
-  $('barTop').style.display = 'block';
-  $('barBot').style.display = 'block';
-  $('cineText').style.display = 'block';
-  $('cinePts').style.display = 'block';
-  officer.visible = true;
-  starGroup.visible = true;
-  sWhistle();
-  sSiren();
-  updateHUD();
-}
+function updateGap(){ $('rageFill').style.width = Math.round((1 - gap / GAP_MAX) * 100) + '%'; }
 function endCinematic(){
-  cineT = 0;
   officer.visible = false;
   starGroup.visible = false;
   $('barTop').style.display = 'none';
@@ -918,11 +907,11 @@ function flashRed(){
 }
 function updateHUD(){
   $('hud-score').textContent = 'টাকা: ৳' + score;
-  $('hud-speed').textContent = Math.round(speedKmh) + ' km/h';
+  const tl = Math.max(0, timeLeft);
+  $('hud-time').textContent = '⏱ ' + Math.floor(tl / 60) + ':' + String(Math.floor(tl % 60)).padStart(2, '0');
   $('hud-hearts').textContent = '♥'.repeat(Math.max(0, hearts)) + '♡'.repeat(Math.max(0, 3 - hearts));
   $('hud-plates').textContent = 'স্টল: ' + stallsGot;
-  const leg = LEGS[legIdx];
-  $('hud-leg').textContent = leg.from + ' → ' + leg.to + ' | বাকি: ' + Math.max(0, Math.round(remaining)) + 'm';
+  $('hud-leg').textContent = '🚨 পুলিশ: ' + Math.round(gap) + 'm পেছনে | তুমি: ' + Math.round(speedP1) + ' km/h | পুলিশ: ' + Math.round(speedP2) + ' km/h';
 }
 function rankFor(s){
   if(s >= 3000) return 'ঢাকার ডন';
@@ -942,20 +931,21 @@ function clearRickshaws(){
   gantries.forEach(g=>scene.remove(g));
   gantries = [];
 }
-function startGame(stIdx){
+function startGame(){
   sClick();
   playVoiceSeq(['meme-chalo', 'meme-gribera']); // start: chaloooo, then goriber bhalo acho
   clearRickshaws();
-  legIdx = stIdx;
-  remaining = LEGS[legIdx].dist;
   score = 0; hearts = 3; stallsGot = 0; grabs = 0; crashes = 0; totalDist = 0;
   stats = { cha: 0, sobji: 0, fol: 0, kapor: 0, mobile: 0, gorib: 0 };
   elapsed = 0; spawnT = 1; stallT = 2; grabCd = 0; shakeT = 0; target = null;
-  flickT = 0; flickSide = 'R'; policePendingOver = false;
+  flickT = 0; flickSide = 'R';
   if(rightArmPivot) rightArmPivot.rotation.z = 0;
   if(leftArmPivot) leftArmPivot.rotation.z = 0;
-  rage = 0; rageFullPlayed = false; updateRage();
-  player.lane = 1; player.x = 0;
+  gap = 40; timeLeft = MATCH_LEN; sirenT = 0; policeStun = 0; caughtBy = '';
+  speedP1 = 50; speedP2 = 50; targetP1 = 50; targetP2 = 50; speedKmh = 50;
+  updateGap();
+  player.lane = 1; player.x = 0; police.lane = 1; police.x = 0;
+  policeBike.visible = true;
   state = 'play'; paused = false;
   $('menu').style.display = 'none';
   $('over').style.display = 'none';
@@ -963,24 +953,39 @@ function startGame(stIdx){
   $('hud').style.display = 'block';
   $('slapBtn').style.display = 'block';
   $('rageWrap').style.display = 'block';
+  $('ctlP1').style.display = 'block';
+  $('ctlP2').style.display = 'block';
   $('prompt').style.display = 'none';
   $('targetMarker').style.display = 'none';
   endCinematic();
   updateHUD();
 }
-function gameOver(){
-  state = 'over';
+function gameOver(result){
+  state = 'over'; caughtBy = result || 'caught';
   $('slapBtn').style.display = 'none';
+  $('ctlP1').style.display = 'none';
+  $('ctlP2').style.display = 'none';
   $('prompt').style.display = 'none';
   $('rageWrap').style.display = 'none';
   $('targetMarker').style.display = 'none';
   endCinematic();
   if(score > best){ best = score; localStorage.setItem('dhakaChadaRideBest', String(best)); }
-  sWin();
-  { const mk = pickMeme(GAMEOVER_POOL); if(mk) playVoice(mk); }
-  $('over-title').textContent = 'খেলা শেষ!';
-  $('over-rank').textContent = 'র‍্যাংক: ' + rankFor(score);
-  $('over-score').textContent = 'টাকা: ৳' + score + ' | সেরা: ৳' + best + ' | দূরত্ব: ' + Math.round(totalDist) + 'm';
+  if(caughtBy === 'escaped'){
+    sWin();
+    { const mk = pickMeme(LEG_POOL); if(mk) playVoice(mk); }
+    $('over-title').textContent = '🏃 পালিয়ে গেলে!';
+    $('over-rank').textContent = 'পুলিশ ধরতে পারলো না — চাঁদাবাজ জিতলো!';
+  } else {
+    { const mk = pickMeme(GAMEOVER_POOL); if(mk) playVoice(mk); }
+    if(caughtBy === 'busted'){
+      $('over-title').textContent = '💥 বাইক থামলো!';
+      $('over-rank').textContent = 'ধাক্কায় জীবন শেষ — পুলিশ ধরে ফেললো!';
+    } else {
+      $('over-title').textContent = '🚨 ধরা পড়ে গেলে!';
+      $('over-rank').textContent = 'পুলিশ একই লেনে এসে ধরে ফেললো!';
+    }
+  }
+  $('over-score').textContent = 'টাকা: ৳' + score + ' | সেরা: ৳' + best + ' | সময়: ' + Math.round(elapsed) + 's | দূরত্ব: ' + Math.round(totalDist) + 'm';
   const cells = [
     ['চাঁদা', grabs], ['স্টল', stallsGot], ['চা স্টল', stats.cha],
     ['সবজি', stats.sobji], ['ফল', stats.fol], ['কাপড়', stats.kapor],
@@ -1103,7 +1108,6 @@ function findStall(){
 }
 function doGrab(){
   if(state !== 'play' || paused) return;
-  if(cineT > 0) return;
   if(grabCd > 0) return;
   const t = findStall();
   // quick sideways grab flick: fires on the press itself, hit or miss,
@@ -1126,16 +1130,14 @@ function doGrab(){
     score += t.type.money;
     stats[t.type.id]++;
     stallsGot++;
-    rage = Math.min(100, rage + t.type.alert);
-    updateRage();
-    if(rage >= 100 && !rageFullPlayed){ rageFullPlayed = true; { const mk = pickMeme(RAGE_POOL); if(mk) playVoice(mk); } startPoliceChase(); }
-    else { const mk = pickMeme(TAUNT_POOL); if(mk) playVoice(mk); }
+    { const mk = pickMeme(TAUNT_POOL); if(mk) playVoice(mk); }
     addOffenceLabel(t.type.name + ' +৳' + t.type.money, '');
   }
 }
 function doCrash(r){
   hearts--;
   crashes++;
+  targetP1 = 35; // crash knocks the collector's speed down
   sCrash();
   playSfx('fart');
   { const mk = pickMeme(CRASH_POOL); if(mk) playVoice(mk); }
@@ -1143,7 +1145,17 @@ function doCrash(r){
   shakeT = 0.4;
   scene.remove(r.mesh);
   rickshaws.splice(rickshaws.indexOf(r), 1);
-  if(hearts <= 0) gameOver();
+  if(hearts <= 0) gameOver('busted');
+}
+function doPoliceCrash(r){
+  policeStun = 1.2;
+  targetP2 = 35; // police loses speed after a crash, gap re-opens
+  sCrash();
+  playSfx('fart');
+  { const mk = pickMeme(CRASH_POOL); if(mk) playVoice(mk); }
+  addOffenceLabel('পুলিশ রিকশায় ধাক্কা খাইলো!', 'bad');
+  scene.remove(r.mesh);
+  rickshaws.splice(rickshaws.indexOf(r), 1);
 }
 
 // ================= INPUT =================
@@ -1151,16 +1163,21 @@ function moveLane(dir){
   if(state !== 'play' || paused) return;
   player.lane = Math.max(0, Math.min(2, player.lane + dir));
 }
-let selSt = 0;
-document.querySelectorAll('.stationBtn').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    selSt = parseInt(b.dataset.st, 10);
-    document.querySelectorAll('.stationBtn').forEach(x=>x.classList.toggle('sel', x===b));
-    sClick();
-  });
-});
-document.querySelectorAll('.stationBtn')[0].classList.add('sel');
-$('startBtn').addEventListener('click', ()=>startGame(selSt));
+function movePoliceLane(dir){
+  if(state !== 'play' || paused) return;
+  police.lane = Math.max(0, Math.min(2, police.lane + dir));
+}
+function speedP1Step(d){
+  if(state !== 'play' || paused) return;
+  targetP1 = Math.max(30, Math.min(70, targetP1 + d));
+  sClick();
+}
+function speedP2Step(d){
+  if(state !== 'play' || paused) return;
+  targetP2 = Math.max(30, Math.min(80, targetP2 + d));
+  sClick();
+}
+$('startBtn').addEventListener('click', ()=>startGame());
 $('againBtn').addEventListener('click', ()=>{
   $('over').style.display = 'none';
   $('menu').style.display = 'flex';
@@ -1176,14 +1193,26 @@ $('soundBtn').addEventListener('click', ()=>{
   if(soundOn) sClick(); else stopAllVoice();
 });
 $('slapBtn').addEventListener('pointerdown', (e)=>{ e.preventDefault(); doGrab(); });
+document.querySelectorAll('#ctlP1 button').forEach(b=>{
+  b.addEventListener('pointerdown', (e)=>{ e.preventDefault(); const a = b.dataset.p1; if(a==='left') moveLane(-1); else if(a==='right') moveLane(1); else if(a==='up') speedP1Step(6); else if(a==='down') speedP1Step(-6); });
+});
+document.querySelectorAll('#ctlP2 button').forEach(b=>{
+  b.addEventListener('pointerdown', (e)=>{ e.preventDefault(); const a = b.dataset.p2; if(a==='left') movePoliceLane(-1); else if(a==='right') movePoliceLane(1); else if(a==='up') speedP2Step(6); else if(a==='down') speedP2Step(-6); });
+});
 window.addEventListener('keydown', (e)=>{
   if(e.key === ' '){ if(state === 'play' && !paused) doGrab(); e.preventDefault(); return; }
   if(e.key === 'p' || e.key === 'P'){ togglePause(); return; }
   if(state !== 'play' || paused) return;
   const k = e.key.toLowerCase();
-  if(k === 'a' || e.key === 'ArrowLeft') moveLane(-1);
-  else if(k === 'd' || e.key === 'ArrowRight') moveLane(1);
-  if(['arrowleft','arrowright'].includes(k)) e.preventDefault();
+  if(k === 'a') moveLane(-1);
+  else if(k === 'd') moveLane(1);
+  else if(k === 'w') speedP1Step(6);
+  else if(k === 's') speedP1Step(-6);
+  else if(e.key === 'ArrowLeft') movePoliceLane(-1);
+  else if(e.key === 'ArrowRight') movePoliceLane(1);
+  else if(e.key === 'ArrowUp') speedP2Step(6);
+  else if(e.key === 'ArrowDown') speedP2Step(-6);
+  if(['arrowleft','arrowright','arrowup','arrowdown'].includes(k)) e.preventDefault();
 });
 let ts = null;
 renderer.domElement.addEventListener('touchstart', (e)=>{
@@ -1217,15 +1246,30 @@ function update(dt){
   if(state !== 'play' || paused) return;
   elapsed += dt;
   lastDt = dt;
-  // Tesla-style speed: ease down behind a close target, recover after passing;
-  // nearly stop during the police cinematic
-  const earlyTarget = findStall();
-  let targetSpeed;
-  if(cineT > 0) targetSpeed = 23;
-  else if(earlyTarget && earlyTarget.group.position.z > -16) targetSpeed = 32;
-  else targetSpeed = 50 + Math.sin(elapsed*0.6)*3;
-  speedKmh += (targetSpeed - speedKmh) * Math.min(1, dt*2.5);
+  // 2-player speed: each rider controls their own target speed; actual
+  // speed eases toward it. A police stun forces the police target down.
+  if(policeStun > 0){ policeStun -= dt; targetP2 = 35; }
+  speedP1 += (targetP1 - speedP1) * Math.min(1, dt*3);
+  speedP2 += (targetP2 - speedP2) * Math.min(1, dt*3);
+  speedKmh = speedP1;
   const scroll = speedKmh * 0.27;
+  // chase gap: closes when the police is faster, opens when slower
+  gap -= (speedP2 - speedP1) * 0.27 * dt;
+  if(gap > GAP_MAX) gap = GAP_MAX;
+  // match timer: 3 minutes for the police to catch the collector
+  timeLeft -= dt;
+  if(timeLeft <= 0){ timeLeft = 0; updateHUD(); gameOver('escaped'); return; }
+  // caught? police alongside in the same lane
+  if(gap <= CATCH_DIST){
+    if(police.lane === player.lane){ updateHUD(); gameOver('caught'); return; }
+    gap = CATCH_DIST;
+  }
+  updateGap();
+  // siren gets urgent when the police closes in
+  if(gap < 15){
+    sirenT -= dt;
+    if(sirenT <= 0){ sSiren(); sirenT = 2.2; }
+  } else sirenT = 0;
   currentScroll = scroll;
   if(grabCd > 0) grabCd -= dt;
   // sideways grab flick: out fast (~0.07s), brief hold, back to rest,
@@ -1244,19 +1288,23 @@ function update(dt){
     }
   }
   if(shakeT > 0) shakeT -= dt;
-  if(cineT > 0){
-    cineT -= dt;
-    // police line speaks when the cutaway reaches the officer side view;
-    // the alert line plays first, so the two voices never overlap
-    if(cineT <= 1.4 && !cinePolicePlayed){ cinePolicePlayed = true; playVoice('police'); }
-    if(cineT <= 0){ endCinematic(); rage = 0; rageFullPlayed = false; updateRage(); if(policePendingOver){ policePendingOver = false; gameOver(); } } // timer guard: the cutaway always exits
-  }
-
   // player
   player.x += (LANES[player.lane] - player.x) * Math.min(1, dt*12);
   bike.position.x = player.x;
   bike.position.y = Math.abs(Math.sin(elapsed*11))*0.04;
   bike.rotation.z = (LANES[player.lane] - player.x) * -0.06;
+  // police bike: visible behind the player, nearer + bigger as the gap closes
+  police.x += (LANES[police.lane] - police.x) * Math.min(1, dt*10);
+  const pz = 2.0 + (gap / GAP_MAX) * 3.0;
+  const pscale = 1.0 - (gap / GAP_MAX) * 0.45;
+  policeBike.position.set(police.x, Math.abs(Math.sin(elapsed*11 + 1))*0.04, pz);
+  policeBike.scale.setScalar(pscale);
+  policeBike.rotation.z = (LANES[police.lane] - police.x) * -0.06;
+  if(policeBike.userData.lights){
+    const on = Math.floor(elapsed*4) % 2 === 0;
+    policeBike.userData.lights.r.visible = on;
+    policeBike.userData.lights.b.visible = !on;
+  }
 
   // road scroll
   roadTex.offset.y -= (scroll * dt) / 18.33;
@@ -1316,9 +1364,13 @@ function update(dt){
     }
     g.position.x += (LANES[r.lane] - g.position.x) * Math.min(1, dt*8);
     g.rotation.z = 0;
-    // crash check (suspended during the police cinematic)
-    if(cineT <= 0 && r.lane === player.lane && Math.abs(g.position.z) < 1.3){
+    // crash checks: player at z~0, police bike at its visual z
+    if(r.lane === player.lane && Math.abs(g.position.z) < 1.3){
       doCrash(r);
+      continue;
+    }
+    if(policeStun <= 0 && r.lane === police.lane && Math.abs(g.position.z - policeBike.position.z) < 1.3){
+      doPoliceCrash(r);
       continue;
     }
     if(g.position.z > 14){ scene.remove(g); rickshaws.splice(i, 1); }
@@ -1343,7 +1395,7 @@ function update(dt){
 
   // Chada prompt: white pill + glowing button + hand icon + speech bubble
   target = findStall();
-  if(target && cineT <= 0){
+  if(target){
     $('prompt').style.display = 'block';
     $('slapBtn').classList.add('armed');
     const marker = $('targetMarker');
@@ -1365,39 +1417,18 @@ function update(dt){
     $('targetMarker').style.display = 'none';
   }
 
-  // distance / legs
-  remaining -= scroll * dt;
+  // distance
   totalDist += scroll * dt;
-  if(remaining <= 0){
-    score += 200;
-    addOffenceLabel('স্টপে পৌঁছেছো! +৳২০০', '');
-    sCoin();
-    { const mk = pickMeme(LEG_POOL); if(mk) playVoice(mk); }
-    legIdx = (legIdx + 1) % LEGS.length;
-    remaining = LEGS[legIdx].dist;
-  }
 
-  // camera: fixed chase view during every grab; letterboxed cutaway
-  // only during the police-chase cinematic
-  if(cineT > 0){
-    if(cineT > 1.4){
-      camera.position.set(player.x, 1.7, -5.5);
-      camera.lookAt(player.x, 1.1, 0.5);
-    } else {
-      camera.position.set(0.6, 1.5, -7.5);
-      camera.lookAt(4.6, 1.3, -8);
-      starGroup.rotation.x += dt * 2.2;
-    }
+  // camera: fixed chase view
+  if(shakeT > 0){
+    camera.position.x = (Math.random()-0.5)*0.25;
+    camera.position.y = 4.6 + (Math.random()-0.5)*0.2;
   } else {
-    if(shakeT > 0){
-      camera.position.x = (Math.random()-0.5)*0.25;
-      camera.position.y = 4.6 + (Math.random()-0.5)*0.2;
-    } else {
-      camera.position.x = 0; camera.position.y = 4.6;
-    }
-    camera.position.z = 8.2;
-    camera.lookAt(0, 1.2, -12);
+    camera.position.x = 0; camera.position.y = 4.6;
   }
+  camera.position.z = 8.2;
+  camera.lookAt(0, 1.2, -12);
 
   updateHUD();
 }
